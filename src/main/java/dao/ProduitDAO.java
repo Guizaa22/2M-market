@@ -86,6 +86,47 @@ public class ProduitDAO {
     }
     
     /**
+     * Récupère un produit par son nom (recherche exacte)
+     * @param nom Le nom du produit
+     * @return Le produit trouvé, null sinon
+     */
+    public Produit findByNomExact(String nom) {
+        String sql = "SELECT * FROM produits WHERE nom = ?";
+        
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, nom);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return mapResultSetToProduit(rs);
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la recherche de produit par nom: " + e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Recherche intelligente : essaie d'abord par code-barres, puis par nom exact
+     * @param recherche Le terme de recherche (code-barres ou nom)
+     * @return Le produit trouvé, null sinon
+     */
+    public Produit rechercherProduit(String recherche) {
+        // Essayer d'abord par code-barres
+        Produit produit = findByCodeBarre(recherche);
+        if (produit != null) {
+            return produit;
+        }
+        
+        // Ensuite par nom exact
+        produit = findByNomExact(recherche);
+        return produit;
+    }
+    
+    /**
      * Récupère les produits avec stock faible
      * @return Liste des produits avec stock faible
      */

@@ -9,21 +9,52 @@
    <children>
       <VBox spacing="15.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
-            <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-background-color: #4CAF50;">
+            <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-background-color: linear-gradient(to right, #2E7D32, #4CAF50);">
                <children>
-                  <Label text="Sélectionner une Catégorie" textAlignment="LEFT" textFill="WHITE">
+                  <Label text="2M Market - Sélectionner une Catégorie" textAlignment="LEFT" textFill="WHITE">
                      <font>
-                        <Font name="System Bold" size="20.0" />
+                        <Font name="System Bold" size="22.0" />
                      </font>
                   </Label>
                   <Region HBox.hgrow="ALWAYS" />
-                  <Button fx:id="retourButton" mnemonicParsing="false" onAction="#handleRetour" text="Retour" 
-                          style="-fx-background-color: white; -fx-text-fill: #4CAF50; -fx-font-weight: bold; -fx-background-radius: 5;" />
+                  <Label fx:id="panierCountLabel" text="Panier: 0" textFill="WHITE" style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 0 10 0 10;" />
+                  <Button fx:id="panierButton" mnemonicParsing="false" onAction="#handleVoirPanier" text="🛒 Panier" 
+                          style="-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 8; -fx-padding: 8 16 8 16; -fx-cursor: hand;" />
+                  <Button fx:id="deconnexionButton" mnemonicParsing="false" onAction="#handleDeconnexion" text="Déconnexion" 
+                          style="-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-padding: 8 16 8 16; -fx-cursor: hand;" />
                </children>
                <padding>
                   <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
                </padding>
             </HBox>
+            <VBox spacing="10.0" style="-fx-background-color: #f5f5f5; -fx-padding: 15;">
+               <children>
+                  <Label text="🔍 Recherche Rapide" textAlignment="LEFT" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #2E7D32;">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <HBox spacing="10.0" alignment="CENTER_LEFT">
+                     <children>
+                        <Label text="Nom ou Code-barres:" style="-fx-font-weight: bold;" />
+                        <TextField fx:id="rechercheField" prefWidth="250.0" promptText="Nom du produit ou code-barres" onAction="#handleRecherche" />
+                        <Label text="Quantité:" style="-fx-font-weight: bold;" />
+                        <HBox spacing="5.0" alignment="CENTER">
+                           <children>
+                              <Button fx:id="moinsButton" mnemonicParsing="false" onAction="#handleMoinsQuantite" text="➖" 
+                                      style="-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 5; -fx-pref-width: 40; -fx-pref-height: 35; -fx-cursor: hand;" />
+                              <TextField fx:id="quantiteField" prefWidth="80.0" text="1" style="-fx-text-alignment: center; -fx-font-size: 16px; -fx-font-weight: bold;" />
+                              <Button fx:id="plusButton" mnemonicParsing="false" onAction="#handlePlusQuantite" text="➕" 
+                                      style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 5; -fx-pref-width: 40; -fx-pref-height: 35; -fx-cursor: hand;" />
+                           </children>
+                        </HBox>
+                        <Button fx:id="ajouterRapideButton" mnemonicParsing="false" onAction="#handleAjouterRapide" text="➕ Ajouter" 
+                                style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-padding: 8 20 8 20; -fx-font-size: 14px; -fx-cursor: hand;" />
+                     </children>
+                  </HBox>
+                  <Label fx:id="produitInfoLabel" text="" style="-fx-text-fill: #4CAF50; -fx-font-weight: bold; -fx-font-size: 13px;" />
+               </children>
+            </VBox>
             <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
                <content>
                   <FlowPane fx:id="categoriesContainer" />

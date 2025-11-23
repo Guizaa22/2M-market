@@ -1,19 +1,23 @@
 package controller;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import dao.ProduitDAO;
 import dao.VenteDAO;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.geometry.Insets;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import model.DetailVente;
 import model.Produit;
 import model.Utilisateur;
 import model.Vente;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 /**
  * Contrôleur pour l'interface de caisse (point de vente)
@@ -21,34 +25,31 @@ import java.time.LocalDateTime;
 public class CaisseController {
     
     @FXML
-    private TextField codeBarreField;
-    
-    @FXML
-    private TextField quantiteField;
-    
-    @FXML
-    private TableView<DetailVente> panierTable;
-    
-    @FXML
-    private TableColumn<DetailVente, String> produitColumn;
-    
-    @FXML
-    private TableColumn<DetailVente, Integer> quantiteColumn;
-    
-    @FXML
-    private TableColumn<DetailVente, BigDecimal> prixUnitaireColumn;
-    
-    @FXML
-    private TableColumn<DetailVente, BigDecimal> sousTotalColumn;
+    private VBox panierListContainer;
     
     @FXML
     private Label totalLabel;
     
     @FXML
-    private Button ajouterButton;
+    private Label tvaLabel;
     
     @FXML
-    private Button retirerButton;
+    private Label userLabel;
+    
+    @FXML
+    private Button scannerButton;
+    
+    @FXML
+    private Button codeBarreButton;
+    
+    @FXML
+    private Button especesButton;
+    
+    @FXML
+    private Button carteButton;
+    
+    @FXML
+    private Button autreButton;
     
     @FXML
     private Button validerButton;
@@ -57,13 +58,15 @@ public class CaisseController {
     private Button annulerButton;
     
     @FXML
-    private Button deconnexionButton;
+    private Button rechercheButton;
+    
+    @FXML
+    private Button modifierQuantiteButton;
     
     @FXML
     private Button categoriesButton;
     
-    @FXML
-    private Label produitInfoLabel;
+    private String modePaiement = "Espèces";
     
     private ProduitDAO produitDAO;
     private VenteDAO venteDAO;
@@ -74,155 +77,321 @@ public class CaisseController {
     private void initialize() {
         produitDAO = new ProduitDAO();
         venteDAO = new VenteDAO();
-        // Utiliser le panier global si disponible
-        if (CategorieProduitsController.getPanierGlobal() != null && 
-            !CategorieProduitsController.getPanierGlobal().isEmpty()) {
-            panierList = CategorieProduitsController.getPanierGlobal();
-        } else {
-            panierList = FXCollections.observableArrayList();
-        }
         utilisateur = ConnexionController.getUtilisateurConnecte();
         
-        // Configuration des colonnes
-        produitColumn.setCellValueFactory(cellData -> {
-            DetailVente detail = cellData.getValue();
-            if (detail.getProduit() != null) {
-                return javafx.beans.binding.Bindings.createStringBinding(
-                    () -> detail.getProduit().getNom() + " (" + detail.getProduit().getCodeBarre() + ")"
-                );
-            }
-            return javafx.beans.binding.Bindings.createStringBinding(() -> "Produit ID: " + detail.getProduitId());
-        });
+        // Utiliser le panier global (getPanierGlobal() l'initialise automatiquement si null)
+        panierList = CategorieProduitsController.getPanierGlobal();
         
-        quantiteColumn.setCellValueFactory(new PropertyValueFactory<>("quantite"));
-        
-        prixUnitaireColumn.setCellValueFactory(new PropertyValueFactory<>("prixVenteUnitaire"));
-        prixUnitaireColumn.setCellFactory(column -> new TableCell<DetailVente, BigDecimal>() {
-            @Override
-            protected void updateItem(BigDecimal item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText(String.format("%.2f €", item));
-                }
-            }
-        });
-        
-        sousTotalColumn.setCellValueFactory(cellData -> {
-            DetailVente detail = cellData.getValue();
-            BigDecimal sousTotal = detail.getSousTotal();
-            return new javafx.beans.property.SimpleObjectProperty<>(sousTotal);
-        });
-        sousTotalColumn.setCellFactory(column -> new TableCell<DetailVente, BigDecimal>() {
-            @Override
-            protected void updateItem(BigDecimal item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText(String.format("%.2f €", item));
-                }
-            }
-        });
-        
-        panierTable.setItems(panierList);
-        
-        // Mettre à jour le total quand le panier change
+        // Mettre à jour le panier quand il change
         panierList.addListener((javafx.collections.ListChangeListener.Change<? extends DetailVente> c) -> {
+            javafx.application.Platform.runLater(() -> {
+                rafraichirPanier();
+                calculerTotal();
+            });
+        });
+        
+        // Charger les produits pour chaque détail
+        for (DetailVente detail : panierList) {
+            if (detail.getProduit() == null) {
+                Produit produit = produitDAO.findById(detail.getProduitId());
+                detail.setProduit(produit);
+            }
+        }
+        
+        rafraichirPanier();
+        calculerTotal();
+        
+        // Afficher le nom de l'utilisateur
+        if (utilisateur != null && userLabel != null) {
+            userLabel.setText("👤 " + utilisateur.getUsername());
+        }
+        
+        // Ajouter le CSS
+        javafx.application.Platform.runLater(() -> {
+            if (panierListContainer != null && panierListContainer.getScene() != null) {
+                javafx.scene.Parent root = panierListContainer.getScene().getRoot();
+                if (root != null) {
+                    String cssUrl = getClass().getResource("/styles/caisse.css").toExternalForm();
+                    if (!root.getStylesheets().contains(cssUrl)) {
+                        root.getStylesheets().add(cssUrl);
+                    }
+                }
+            }
+        });
+    }
+    
+    
+    private void rafraichirPanier() {
+        panierListContainer.getChildren().clear();
+        
+        if (panierList.isEmpty()) {
+            Label emptyLabel = new Label("🛒 Panier vide\nAjoutez des produits pour commencer");
+            emptyLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #999; -fx-alignment: center;");
+            panierListContainer.getChildren().add(emptyLabel);
+            return;
+        }
+        
+        for (DetailVente detail : panierList) {
+            HBox itemRow = createPanierItemRow(detail);
+            panierListContainer.getChildren().add(itemRow);
+        }
+    }
+    
+    private HBox createPanierItemRow(DetailVente detail) {
+        Produit produit = detail.getProduit();
+        if (produit == null) {
+            produit = produitDAO.findById(detail.getProduitId());
+            detail.setProduit(produit);
+        }
+        
+        // Variables finales pour les lambdas
+        final Produit finalProduit = produit;
+        final DetailVente finalDetail = detail;
+        
+        HBox row = new HBox(15);
+        row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        row.setPadding(new Insets(10));
+        row.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);");
+        row.setPrefHeight(80);
+        
+        // Icône produit (placeholder)
+        Label iconLabel = new Label("📦");
+        iconLabel.setStyle("-fx-font-size: 32px;");
+        
+        // Informations produit
+        VBox infoBox = new VBox(5);
+        infoBox.setPrefWidth(200);
+        
+        Label nomLabel = new Label(finalProduit != null ? finalProduit.getNom() : "Produit ID: " + finalDetail.getProduitId());
+        nomLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #333;");
+        nomLabel.setWrapText(true);
+        
+        Label descLabel = new Label(finalProduit != null ? finalProduit.getCodeBarre() : "N/A");
+        descLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #666;");
+        
+        infoBox.getChildren().addAll(nomLabel, descLabel);
+        
+        // Contrôles de quantité
+        HBox quantiteBox = new HBox(5);
+        quantiteBox.setAlignment(javafx.geometry.Pos.CENTER);
+        
+        Label quantiteLabel = new Label(String.valueOf(finalDetail.getQuantite()));
+        quantiteLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-pref-width: 40; -fx-alignment: center;");
+        
+        Button moinsButton = new Button("-");
+        moinsButton.setPrefSize(30, 30);
+        moinsButton.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;");
+        moinsButton.setOnAction(e -> {
+            if (finalDetail.getQuantite() > 1) {
+                finalDetail.setQuantite(finalDetail.getQuantite() - 1);
+                quantiteLabel.setText(String.valueOf(finalDetail.getQuantite()));
+                rafraichirPanier();
+                calculerTotal();
+            }
+        });
+        
+        Button plusButton = new Button("+");
+        plusButton.setPrefSize(30, 30);
+        plusButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;");
+        plusButton.setOnAction(e -> {
+            if (finalProduit != null && finalDetail.getQuantite() < finalProduit.getQuantiteStock()) {
+                finalDetail.setQuantite(finalDetail.getQuantite() + 1);
+                quantiteLabel.setText(String.valueOf(finalDetail.getQuantite()));
+                rafraichirPanier();
+                calculerTotal();
+            }
+        });
+        
+        quantiteBox.getChildren().addAll(moinsButton, quantiteLabel, plusButton);
+        
+        // Prix
+        Label prixLabel = new Label("€ " + String.format("%.2f", finalDetail.getSousTotal()));
+        prixLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #4CAF50; -fx-pref-width: 80; -fx-alignment: center-right;");
+        
+        row.getChildren().addAll(iconLabel, infoBox, quantiteBox, prixLabel);
+        
+        return row;
+    }
+    
+    private VBox createPanierCard(DetailVente detail) {
+        VBox card = new VBox(10);
+        card.setPrefSize(280, 200);
+        card.setPadding(new Insets(15));
+        card.getStyleClass().add("panier-card");
+        card.setStyle(
+            "-fx-background-color: white; " +
+            "-fx-background-radius: 12; " +
+            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 10, 0, 0, 4); " +
+            "-fx-border-color: #e0e0e0; " +
+            "-fx-border-width: 1; " +
+            "-fx-border-radius: 12;"
+        );
+        
+        Produit produit = detail.getProduit();
+        if (produit == null) {
+            produit = produitDAO.findById(detail.getProduitId());
+            detail.setProduit(produit);
+        }
+        
+        // Nom du produit
+        Label nomLabel = new Label(produit != null ? produit.getNom() : "Produit ID: " + detail.getProduitId());
+        nomLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2E7D32;");
+        nomLabel.setWrapText(true);
+        nomLabel.setMaxWidth(250);
+        
+        // Code-barres
+        Label codeBarreLabel = new Label("📋 " + (produit != null ? produit.getCodeBarre() : "N/A"));
+        codeBarreLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #666;");
+        
+        // Quantité et prix
+        HBox infoBox = new HBox(15);
+        Label quantiteLabel = new Label("Quantité: " + detail.getQuantite());
+        quantiteLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #333;");
+        
+        Label prixLabel = new Label(String.format("%.2f €", detail.getPrixVenteUnitaire()) + " / unité");
+        prixLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #666;");
+        
+        infoBox.getChildren().addAll(quantiteLabel, prixLabel);
+        
+        // Sous-total
+        Label sousTotalLabel = new Label("Sous-total: " + String.format("%.2f €", detail.getSousTotal()));
+        sousTotalLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #4CAF50;");
+        
+        // Indication que la carte est cliquable
+        Label clickHint = new Label("💡 Double-cliquez pour modifier");
+        clickHint.setStyle("-fx-font-size: 11px; -fx-text-fill: #999; -fx-font-style: italic;");
+        
+        // Bouton retirer
+        Button retirerButton = new Button("🗑️ Retirer");
+        retirerButton.setPrefWidth(250);
+        retirerButton.setPrefHeight(35);
+        retirerButton.setStyle(
+            "-fx-background-color: #f44336; " +
+            "-fx-text-fill: white; " +
+            "-fx-font-weight: bold; " +
+            "-fx-background-radius: 8; " +
+            "-fx-cursor: hand; " +
+            "-fx-font-size: 13px;"
+        );
+        
+        retirerButton.setOnMouseEntered(e -> {
+            retirerButton.setStyle(
+                "-fx-background-color: #d32f2f; " +
+                "-fx-text-fill: white; " +
+                "-fx-font-weight: bold; " +
+                "-fx-background-radius: 8; " +
+                "-fx-cursor: hand; " +
+                "-fx-font-size: 13px; " +
+                "-fx-scale-x: 1.05; " +
+                "-fx-scale-y: 1.05;"
+            );
+        });
+        
+        retirerButton.setOnMouseExited(e -> {
+            retirerButton.setStyle(
+                "-fx-background-color: #f44336; " +
+                "-fx-text-fill: white; " +
+                "-fx-font-weight: bold; " +
+                "-fx-background-radius: 8; " +
+                "-fx-cursor: hand; " +
+                "-fx-font-size: 13px; " +
+                "-fx-scale-x: 1.0; " +
+                "-fx-scale-y: 1.0;"
+            );
+        });
+        
+        retirerButton.setOnAction(e -> {
+            panierList.remove(detail);
+            rafraichirPanier();
             calculerTotal();
         });
         
-        quantiteField.setText("1");
-        codeBarreField.requestFocus();
-    }
-    
-    @FXML
-    private void handleAjouter() {
-        String codeBarre = codeBarreField.getText().trim();
+        // Bouton modifier
+        Button modifierButton = new Button("✏️ Modifier");
+        modifierButton.setPrefWidth(250);
+        modifierButton.setPrefHeight(35);
+        modifierButton.setStyle(
+            "-fx-background-color: #2196F3; " +
+            "-fx-text-fill: white; " +
+            "-fx-font-weight: bold; " +
+            "-fx-background-radius: 8; " +
+            "-fx-cursor: hand; " +
+            "-fx-font-size: 13px;"
+        );
         
-        if (codeBarre.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Code-barres vide", 
-                     "Veuillez entrer un code-barres.");
-            return;
-        }
+        modifierButton.setOnMouseEntered(e -> {
+            modifierButton.setStyle(
+                "-fx-background-color: #1976D2; " +
+                "-fx-text-fill: white; " +
+                "-fx-font-weight: bold; " +
+                "-fx-background-radius: 8; " +
+                "-fx-cursor: hand; " +
+                "-fx-font-size: 13px; " +
+                "-fx-scale-x: 1.05; " +
+                "-fx-scale-y: 1.05;"
+            );
+        });
         
-        Produit produit = produitDAO.findByCodeBarre(codeBarre);
+        modifierButton.setOnMouseExited(e -> {
+            modifierButton.setStyle(
+                "-fx-background-color: #2196F3; " +
+                "-fx-text-fill: white; " +
+                "-fx-font-weight: bold; " +
+                "-fx-background-radius: 8; " +
+                "-fx-cursor: hand; " +
+                "-fx-font-size: 13px; " +
+                "-fx-scale-x: 1.0; " +
+                "-fx-scale-y: 1.0;"
+            );
+        });
         
-        if (produit == null) {
-            showAlert(Alert.AlertType.WARNING, "Produit introuvable", 
-                     "Aucun produit trouvé avec ce code-barres.");
-            codeBarreField.clear();
-            return;
-        }
+        modifierButton.setOnAction(e -> {
+            // Modifier la quantité directement dans le panier
+            // La quantité peut être modifiée avec les boutons +/-
+        });
         
-        if (produit.getQuantiteStock() <= 0) {
-            showAlert(Alert.AlertType.WARNING, "Stock insuffisant", 
-                     "Ce produit n'est plus en stock.");
-            codeBarreField.clear();
-            return;
-        }
+        // HBox pour les boutons
+        HBox buttonsBox = new HBox(10);
+        buttonsBox.getChildren().addAll(modifierButton, retirerButton);
         
-        int quantite;
-        try {
-            quantite = Integer.parseInt(quantiteField.getText().trim());
-            if (quantite <= 0) {
-                throw new NumberFormatException();
+        // VBox pour organiser les éléments
+        VBox contentBox = new VBox(8);
+        contentBox.getChildren().addAll(nomLabel, codeBarreLabel, infoBox, sousTotalLabel, clickHint, buttonsBox);
+        
+        // Effet hover sur la carte avec indication cliquable
+        card.setOnMouseEntered(e -> {
+            card.setStyle(
+                "-fx-background-color: linear-gradient(to bottom, #f9f9f9, #f5f5f5); " +
+                "-fx-background-radius: 12; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(76, 175, 80, 0.3), 15, 0, 0, 6); " +
+                "-fx-border-color: #4CAF50; " +
+                "-fx-border-width: 2; " +
+                "-fx-border-radius: 12;"
+            );
+        });
+        
+        card.setOnMouseExited(e -> {
+            card.setStyle(
+                "-fx-background-color: white; " +
+                "-fx-background-radius: 12; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 10, 0, 0, 4); " +
+                "-fx-border-color: #e0e0e0; " +
+                "-fx-border-width: 1; " +
+                "-fx-border-radius: 12;"
+            );
+        });
+        
+        card.getChildren().add(contentBox);
+        
+        // Double-clic sur la carte pour modifier (alternative au bouton)
+        final Produit finalProduitCard = produit; // Final pour lambda
+        card.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2 && finalProduitCard != null) {
+                // La quantité peut être modifiée avec les boutons +/-
             }
-        } catch (NumberFormatException e) {
-            showAlert(Alert.AlertType.WARNING, "Quantité invalide", 
-                     "Veuillez entrer une quantité valide.");
-            return;
-        }
+        });
         
-        if (quantite > produit.getQuantiteStock()) {
-            showAlert(Alert.AlertType.WARNING, "Stock insuffisant", 
-                     "Stock disponible: " + produit.getQuantiteStock());
-            return;
-        }
-        
-        // Vérifier si le produit est déjà dans le panier
-        DetailVente detailExistant = panierList.stream()
-            .filter(d -> d.getProduitId() == produit.getId())
-            .findFirst()
-            .orElse(null);
-        
-        if (detailExistant != null) {
-            int nouvelleQuantite = detailExistant.getQuantite() + quantite;
-            if (nouvelleQuantite > produit.getQuantiteStock()) {
-                showAlert(Alert.AlertType.WARNING, "Stock insuffisant", 
-                         "Quantité totale demandée dépasse le stock disponible.");
-                return;
-            }
-            detailExistant.setQuantite(nouvelleQuantite);
-        } else {
-            DetailVente detail = new DetailVente();
-            detail.setProduitId(produit.getId());
-            detail.setQuantite(quantite);
-            detail.setPrixVenteUnitaire(produit.getPrixVenteDefaut());
-            detail.setPrixAchatUnitaire(produit.getPrixAchatActuel());
-            detail.setProduit(produit);
-            panierList.add(detail);
-        }
-        
-        codeBarreField.clear();
-        quantiteField.setText("1");
-        codeBarreField.requestFocus();
-        calculerTotal();
-    }
-    
-    @FXML
-    private void handleRetirer() {
-        DetailVente detailSelectionne = panierTable.getSelectionModel().getSelectedItem();
-        
-        if (detailSelectionne == null) {
-            showAlert(Alert.AlertType.WARNING, "Aucune sélection", 
-                     "Veuillez sélectionner un article à retirer.");
-            return;
-        }
-        
-        panierList.remove(detailSelectionne);
-        calculerTotal();
+        return card;
     }
     
     @FXML
@@ -252,13 +421,14 @@ public class CaisseController {
         // Enregistrer la vente
         if (venteDAO.create(vente)) {
             showAlert(Alert.AlertType.INFORMATION, "Vente validée", 
-                     "La vente a été enregistrée avec succès.\nTotal: " + 
-                     String.format("%.2f €", total));
+                     "La vente a été enregistrée avec succès.\n" +
+                     "Mode de paiement: " + modePaiement + "\n" +
+                     "Total: " + String.format("%.2f €", total));
             
             // Vider le panier
             panierList.clear();
             calculerTotal();
-            codeBarreField.requestFocus();
+            rafraichirPanier();
         } else {
             showAlert(Alert.AlertType.ERROR, "Erreur", 
                      "Erreur lors de l'enregistrement de la vente.");
@@ -276,7 +446,7 @@ public class CaisseController {
             if (confirmAlert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 panierList.clear();
                 calculerTotal();
-                codeBarreField.requestFocus();
+                rafraichirPanier();
             }
         }
     }
@@ -292,50 +462,77 @@ public class CaisseController {
         }
     }
     
-    @FXML
-    private void handleDeconnexion() {
-        ConnexionController.deconnecter();
-        try {
-            javafx.stage.Stage stage = (javafx.stage.Stage) deconnexionButton.getScene().getWindow();
-            util.FXMLUtils.changeScene(stage, "/view/Connexion.fxml", "Connexion");
-        } catch (Exception e) {
-            showAlert(Alert.AlertType.ERROR, "Erreur", 
-                     "Erreur lors de la déconnexion: " + e.getMessage());
-        }
-    }
     
-    @FXML
-    private void handleCodeBarreScan() {
-        // Lorsqu'un code-barres est scanné, ajouter automatiquement
-        if (!codeBarreField.getText().trim().isEmpty()) {
-            handleAjouter();
-        }
-    }
-    
-    @FXML
-    private void handleRechercheProduit() {
-        String codeBarre = codeBarreField.getText().trim();
-        if (!codeBarre.isEmpty()) {
-            Produit produit = produitDAO.findByCodeBarre(codeBarre);
-            if (produit != null) {
-                produitInfoLabel.setText(produit.getNom() + " - " + 
-                                        String.format("%.2f €", produit.getPrixVenteDefaut()) + 
-                                        " - Stock: " + produit.getQuantiteStock());
-            } else {
-                produitInfoLabel.setText("Produit introuvable");
-            }
-        } else {
-            produitInfoLabel.setText("");
-        }
-    }
     
     private BigDecimal calculerTotal() {
         BigDecimal total = panierList.stream()
             .map(DetailVente::getSousTotal)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         
-        totalLabel.setText("Total: " + String.format("%.2f €", total));
+        // Calculer TVA (20%)
+        BigDecimal tva = total.multiply(new BigDecimal("0.20"));
+        
+        if (totalLabel != null) {
+            totalLabel.setText("€ " + String.format("%.2f", total));
+        }
+        if (tvaLabel != null) {
+            tvaLabel.setText("TVA: € " + String.format("%.2f", tva));
+        }
+        
         return total;
+    }
+    
+    @FXML
+    private void handleScanner() {
+        // Ouvrir la recherche de produits
+        handleRechercheProduit();
+    }
+    
+    @FXML
+    private void handleCodeBarre() {
+        // Ouvrir la recherche de produits
+        handleRechercheProduit();
+    }
+    
+    @FXML
+    private void handlePaiementEspeces() {
+        modePaiement = "Espèces";
+        especesButton.setStyle("-fx-background-color: #2E7D32; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
+        carteButton.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
+        autreButton.setStyle("-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
+    }
+    
+    @FXML
+    private void handlePaiementCarte() {
+        modePaiement = "Carte Bancaire";
+        especesButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
+        carteButton.setStyle("-fx-background-color: #1565C0; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
+        autreButton.setStyle("-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
+    }
+    
+    @FXML
+    private void handlePaiementAutre() {
+        modePaiement = "Autre";
+        especesButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
+        carteButton.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
+        autreButton.setStyle("-fx-background-color: #F57C00; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
+    }
+    
+    @FXML
+    private void handleModifierQuantite() {
+        // Ouvrir la recherche pour modifier une quantité
+        handleRechercheProduit();
+    }
+    
+    @FXML
+    private void handleRechercheProduit() {
+        try {
+            javafx.stage.Stage stage = (javafx.stage.Stage) rechercheButton.getScene().getWindow();
+            util.FXMLUtils.changeScene(stage, "/view/CaisseCategories.fxml", "Catégories");
+        } catch (Exception e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", 
+                     "Erreur lors de l'ouverture de la recherche: " + e.getMessage());
+        }
     }
     
     private void showAlert(Alert.AlertType type, String title, String message) {

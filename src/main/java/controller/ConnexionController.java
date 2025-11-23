@@ -33,6 +33,32 @@ public class ConnexionController {
     private void initialize() {
         // Focus sur le champ username au démarrage
         usernameField.requestFocus();
+        
+        // Ajouter le CSS programmatiquement et l'image de fond
+        javafx.application.Platform.runLater(() -> {
+            if (usernameField != null && usernameField.getScene() != null) {
+                javafx.scene.Parent root = usernameField.getScene().getRoot();
+                if (root != null) {
+                    // Ajouter le CSS
+                    String cssUrl = getClass().getResource("/styles/login.css").toExternalForm();
+                    if (!root.getStylesheets().contains(cssUrl)) {
+                        root.getStylesheets().add(cssUrl);
+                    }
+                    
+                    // S'assurer que l'image de fond est appliquée
+                    if (root instanceof javafx.scene.layout.AnchorPane) {
+                        javafx.scene.layout.AnchorPane anchorPane = (javafx.scene.layout.AnchorPane) root;
+                        String bgImage = getClass().getResource("/background/backgroundlogin.jpg").toExternalForm();
+                        anchorPane.setStyle(
+                            "-fx-background-image: url('" + bgImage + "'); " +
+                            "-fx-background-size: cover; " +
+                            "-fx-background-position: center; " +
+                            "-fx-background-repeat: no-repeat;"
+                        );
+                    }
+                }
+            }
+        });
     }
     
     @FXML
@@ -58,8 +84,8 @@ public class ConnexionController {
                     // Rediriger vers le dashboard admin
                     FXMLUtils.changeScene(stage, "/view/AdminDashboard.fxml", "Dashboard Administrateur");
                 } else {
-                    // Rediriger vers la caisse pour les employés
-                    FXMLUtils.changeScene(stage, "/view/Caisse.fxml", "Caisse - Point de Vente");
+                    // Rediriger vers les catégories pour les employés (page principale)
+                    FXMLUtils.changeScene(stage, "/view/CaisseCategories.fxml", "Catégories");
                 }
             } catch (IOException e) {
                 showAlert(Alert.AlertType.ERROR, "Erreur", 
