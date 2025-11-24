@@ -293,7 +293,7 @@ public class ProduitDAO {
         
         // Essayer d'abord avec la table categories
         try {
-            String sql = "SELECT nom FROM categories ORDER BY nom";
+            String sql = "SELECT categorie FROM produits ORDER BY nom";
             try (Connection conn = DBConnector.getConnection();
                  Statement stmt = conn.createStatement();
                  ResultSet rs = stmt.executeQuery(sql)) {

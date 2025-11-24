@@ -1,24 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CaisseController">
+<AnchorPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CaisseController">
    <children>
       <VBox spacing="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
             <!-- Header -->
             <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-background-color: linear-gradient(to right, #2E7D32, #4CAF50); -fx-padding: 15;">
                <children>
-                  <Label text="2M-Market - Caisse Employé" textAlignment="LEFT" textFill="WHITE" style="-fx-font-weight: bold; -fx-font-size: 20px;">
+                  <Label style="-fx-font-weight: bold; -fx-font-size: 20px;" text="2M-Market - Caisse Employé" textAlignment="LEFT" textFill="WHITE">
                      <font>
                         <Font name="System Bold" size="20.0" />
                      </font>
                   </Label>
                   <Region HBox.hgrow="ALWAYS" />
-                  <Label fx:id="userLabel" text="👤 Utilisateur" textFill="WHITE" style="-fx-font-weight: bold; -fx-font-size: 14px;" />
+                  <Label fx:id="userLabel" style="-fx-font-weight: bold; -fx-font-size: 14px;" text="👤 Utilisateur" textFill="WHITE" />
                </children>
             </HBox>
             
@@ -26,73 +30,49 @@
             <HBox spacing="0.0" VBox.vgrow="ALWAYS">
                <children>
                   <!-- Left Panel - Panier -->
-                  <VBox spacing="10.0" prefWidth="400.0" style="-fx-background-color: #f9f9f9; -fx-padding: 15;">
+                  <VBox prefWidth="400.0" spacing="10.0" style="-fx-background-color: #f9f9f9; -fx-padding: 15;">
                      <children>
-                        <Label text="🛒 Panier Achat" textAlignment="LEFT" style="-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: #2E7D32;">
+                        <Label style="-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: #2E7D32;" text="🛒 Panier Achat" textAlignment="LEFT">
                            <font>
                               <Font name="System Bold" size="18.0" />
                            </font>
                         </Label>
-                        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background: transparent;">
+                        <ScrollPane fitToWidth="true" style="-fx-background: transparent;" VBox.vgrow="ALWAYS">
                            <content>
                               <VBox fx:id="panierListContainer" spacing="10.0" style="-fx-padding: 10;" />
                            </content>
                         </ScrollPane>
-                        <HBox spacing="10.0" alignment="CENTER">
+                        <HBox alignment="CENTER" spacing="10.0">
                            <children>
-                              <Button fx:id="scannerButton" mnemonicParsing="false" onAction="#handleScanner" text="📷 Scanner Article" 
-                                      style="-fx-background-color: #616161; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-pref-height: 40; -fx-pref-width: 180;" />
-                              <Button fx:id="codeBarreButton" mnemonicParsing="false" onAction="#handleCodeBarre" text="📋 Code-barres" 
-                                      style="-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-pref-height: 40; -fx-pref-width: 180;" />
+                              <Button fx:id="scannerButton" mnemonicParsing="false" onAction="#handleScanner" style="-fx-background-color: #616161; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-pref-height: 40; -fx-pref-width: 180;" text="📷 Scanner Article" />
+                              <Button fx:id="codeBarreButton" mnemonicParsing="false" onAction="#handleCodeBarre" style="-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-pref-height: 40; -fx-pref-width: 180;" text="📋 Code-barres" />
                            </children>
                         </HBox>
                      </children>
                   </VBox>
                   
                   <!-- Center Panel - Total & Payment -->
-                  <VBox spacing="15.0" prefWidth="350.0" alignment="CENTER" style="-fx-background-color: #e8e8e8; -fx-padding: 20;">
+                  <VBox alignment="CENTER" prefWidth="350.0" spacing="15.0" style="-fx-background-color: #e8e8e8; -fx-padding: 20;">
                      <children>
-                        <!-- Total Box -->
-                        <VBox spacing="5.0" alignment="CENTER" style="-fx-background-color: #424242; -fx-background-radius: 10; -fx-padding: 20; -fx-pref-width: 300;">
-                           <children>
-                              <Label text="TOTAL" textFill="WHITE" style="-fx-font-weight: bold; -fx-font-size: 16px;" />
-                              <Label fx:id="totalLabel" text="€ 0,00" textFill="WHITE" style="-fx-font-weight: bold; -fx-font-size: 36px;" />
-                              <Label fx:id="tvaLabel" text="TVA: € 0,00" textFill="#bdbdbd" style="-fx-font-size: 14px;" />
-                           </children>
-                        </VBox>
                         
-                        <!-- Payment Options -->
-                        <VBox spacing="10.0" alignment="CENTER" style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 20; -fx-pref-width: 300;">
+                        <!-- Right Panel - Actions -->
+                        <VBox alignment="CENTER" prefWidth="300.0" spacing="15.0" style="-fx-background-color: #f5f5f5; -fx-padding: 20;">
                            <children>
-                              <Label text="Mode de Paiement" textAlignment="CENTER" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #2E7D32;">
-                                 <font>
-                                    <Font name="System Bold" size="16.0" />
-                                 </font>
-                              </Label>
-                              <Button fx:id="especesButton" mnemonicParsing="false" onAction="#handlePaiementEspeces" text="💰 Espèces" 
-                                      style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;" />
-                              <Button fx:id="carteButton" mnemonicParsing="false" onAction="#handlePaiementCarte" text="💳 Carte Bancaire" 
-                                      style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;" />
-                              <Button fx:id="autreButton" mnemonicParsing="false" onAction="#handlePaiementAutre" text="🔀 Autre Paiement" 
-                                      style="-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;" />
+                              <Button fx:id="annulerButton" mnemonicParsing="false" onAction="#handleAnnuler" style="-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 60; -fx-pref-width: 250; -fx-cursor: hand;" text="❌ Annuler Vente" />
+                              <Button fx:id="validerButton" mnemonicParsing="false" onAction="#handleValider" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 60; -fx-pref-width: 250; -fx-cursor: hand;" text="✅ Valider &amp; Imprimer" />
+                              <Button fx:id="rechercheButton" mnemonicParsing="false" onAction="#handleRechercheProduit" style="-fx-background-color: #757575; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;" text="🔍 Recherche Produit" />
+                              <Button fx:id="modifierQuantiteButton" mnemonicParsing="false" onAction="#handleModifierQuantite" style="-fx-background-color: #757575; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;" text="✏️ Modifier Quantité" />
+                              <Button fx:id="categoriesButton" mnemonicParsing="false" onAction="#handleCategories" style="-fx-background-color: #607D8B; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 8; -fx-pref-height: 40; -fx-pref-width: 250; -fx-cursor: hand;" text="📂 Catégories" />
                            </children>
                         </VBox>
-                     </children>
-                  </VBox>
-                  
-                  <!-- Right Panel - Actions -->
-                  <VBox spacing="15.0" prefWidth="300.0" alignment="CENTER" style="-fx-background-color: #f5f5f5; -fx-padding: 20;">
-                     <children>
-                        <Button fx:id="annulerButton" mnemonicParsing="false" onAction="#handleAnnuler" text="❌ Annuler Vente" 
-                                style="-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 60; -fx-pref-width: 250; -fx-cursor: hand;" />
-                        <Button fx:id="validerButton" mnemonicParsing="false" onAction="#handleValider" text="✅ Valider &amp; Imprimer" 
-                                style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 60; -fx-pref-width: 250; -fx-cursor: hand;" />
-                        <Button fx:id="rechercheButton" mnemonicParsing="false" onAction="#handleRechercheProduit" text="🔍 Recherche Produit" 
-                                style="-fx-background-color: #757575; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;" />
-                        <Button fx:id="modifierQuantiteButton" mnemonicParsing="false" onAction="#handleModifierQuantite" text="✏️ Modifier Quantité" 
-                                style="-fx-background-color: #757575; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;" />
-                        <Button fx:id="categoriesButton" mnemonicParsing="false" onAction="#handleCategories" text="📂 Catégories" 
-                                style="-fx-background-color: #607D8B; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 8; -fx-pref-height: 40; -fx-pref-width: 250; -fx-cursor: hand;" />
+                        <!-- Total Box -->
+                        <VBox alignment="CENTER" spacing="5.0" style="-fx-background-color: #424242; -fx-background-radius: 10; -fx-padding: 20; -fx-pref-width: 300;">
+                           <children>
+                              <Label style="-fx-font-weight: bold; -fx-font-size: 16px;" text="TOTAL" textFill="WHITE" />
+                              <Label fx:id="totalLabel" style="-fx-font-weight: bold; -fx-font-size: 36px;" text="€ 0,00" textFill="WHITE" />
+                              <Label fx:id="tvaLabel" style="-fx-font-size: 14px;" text="TVA: € 0,00" textFill="#bdbdbd" />
+                           </children>
+                        </VBox>
                      </children>
                   </VBox>
                </children>

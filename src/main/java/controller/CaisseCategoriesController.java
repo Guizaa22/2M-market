@@ -21,173 +21,218 @@ import model.Produit;
  * Contrôleur pour l'interface de sélection de catégories
  */
 public class CaisseCategoriesController {
-    
+
+    // ============================================
+    // CONSTANTES DE STYLE
+    // ============================================
+    private static final String STYLE_BUTTON_BASE =
+            "-fx-font-size: 18px; " +
+                    "-fx-font-weight: bold; " +
+                    "-fx-background-color: linear-gradient(to bottom, #4CAF50, #2E7D32); " +
+                    "-fx-text-fill: white; " +
+                    "-fx-background-radius: 20; " +
+                    "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 12, 0, 0, 6); " +
+                    "-fx-cursor: hand; " +
+                    "-fx-padding: 15;";
+
+    private static final String STYLE_BUTTON_HOVER =
+            "-fx-font-size: 20px; " +
+                    "-fx-font-weight: bold; " +
+                    "-fx-background-color: linear-gradient(to bottom, #66BB6A, #4CAF50); " +
+                    "-fx-text-fill: white; " +
+                    "-fx-background-radius: 20; " +
+                    "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 18, 0, 0, 10); " +
+                    "-fx-scale-x: 1.08; " +
+                    "-fx-scale-y: 1.08; " +
+                    "-fx-cursor: hand; " +
+                    "-fx-padding: 15;";
+
+    private static final int BUTTON_WIDTH = 220;
+    private static final int BUTTON_HEIGHT = 180;
+    private static final int ICON_SIZE = 48;
+
+    // ============================================
+    // COMPOSANTS FXML
+    // ============================================
     @FXML
     private FlowPane categoriesContainer;
-    
+
     @FXML
     private Button panierButton;
-    
+
     @FXML
     private Button deconnexionButton;
-    
+
     @FXML
     private Label panierCountLabel;
-    
+
     @FXML
     private TextField rechercheField;
-    
+
     @FXML
     private TextField quantiteField;
-    
+
     @FXML
     private Button ajouterRapideButton;
-    
+
     @FXML
     private Button plusButton;
-    
+
     @FXML
     private Button moinsButton;
-    
+
     @FXML
     private Label produitInfoLabel;
-    
+
+    // ============================================
+    // ATTRIBUTS
+    // ============================================
     private ProduitDAO produitDAO;
-    
+    private Produit produitTrouve = null;
+
+    // ============================================
+    // INITIALISATION
+    // ============================================
     @FXML
     private void initialize() {
         produitDAO = new ProduitDAO();
         quantiteField.setText("1");
         rechercheField.requestFocus();
-        
-        // Écouter les changements dans le champ de recherche pour auto-remplissage
+
+        configurerRecherche();
+        chargerStyles();
+        updatePanierCount();
+        ecouterChangementsPanier();
+        chargerCategories();
+    }
+
+    /**
+     * Configure le listener de recherche
+     */
+    private void configurerRecherche() {
         rechercheField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null && !newVal.trim().isEmpty()) {
                 rechercherProduit(newVal.trim());
             } else {
                 produitInfoLabel.setText("");
+                produitTrouve = null;
             }
         });
-        
-        // Ajouter le CSS après que la scène soit chargée
+    }
+
+    /**
+     * Charge les styles CSS
+     */
+    private void chargerStyles() {
         javafx.application.Platform.runLater(() -> {
             if (panierButton != null && panierButton.getScene() != null) {
                 javafx.scene.Parent root = panierButton.getScene().getRoot();
                 if (root != null) {
-                    String cssUrl = getClass().getResource("/styles/caisse.css").toExternalForm();
-                    if (!root.getStylesheets().contains(cssUrl)) {
-                        root.getStylesheets().add(cssUrl);
+                    try {
+                        String cssUrl = getClass().getResource("/styles/caisse.css").toExternalForm();
+                        if (!root.getStylesheets().contains(cssUrl)) {
+                            root.getStylesheets().add(cssUrl);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Impossible de charger le CSS: " + e.getMessage());
                     }
                 }
             }
         });
-        
-        // Mettre à jour le compteur de panier
-        updatePanierCount();
-        
-        // Écouter les changements du panier global
+    }
+
+    /**
+     * Écoute les changements du panier global
+     */
+    private void ecouterChangementsPanier() {
         if (CategorieProduitsController.getPanierGlobal() != null) {
             CategorieProduitsController.getPanierGlobal().addListener(
-                (javafx.collections.ListChangeListener.Change<? extends DetailVente> c) -> {
-                    updatePanierCount();
-                }
+                    (javafx.collections.ListChangeListener.Change<? extends DetailVente> c) -> {
+                        updatePanierCount();
+                    }
             );
         }
-        
-        chargerCategories();
     }
-    
+
+    // ============================================
+    // GESTION DES CATÉGORIES
+    // ============================================
+
+    /**
+     * Charge et affiche toutes les catégories depuis la base de données
+     */
     private void chargerCategories() {
-        categoriesContainer.getChildren().clear();
-        categoriesContainer.setHgap(20);
-        categoriesContainer.setVgap(20);
-        categoriesContainer.setPadding(new Insets(20));
-        
-        List<String> categories = produitDAO.findAllCategories();
-        
-        // Si aucune catégorie, ajouter des catégories par défaut
-        if (categories.isEmpty()) {
-            categories.add("Alimentaire");
-            categories.add("Boissons");
-            categories.add("Tabac");
-            categories.add("Hygiène");
-            categories.add("Divers");
-        }
-        
-        for (String categorie : categories) {
-            Button categoryButton = createCategoryButton(categorie);
-            categoriesContainer.getChildren().add(categoryButton);
+        try {
+            // Configuration du conteneur
+            categoriesContainer.getChildren().clear();
+            categoriesContainer.setHgap(20);
+            categoriesContainer.setVgap(20);
+            categoriesContainer.setPadding(new Insets(20));
+
+            // Récupération des catégories depuis la base de données
+            List<String> categories = produitDAO.findAllCategories();
+
+            // Vérifier si des catégories existent
+            if (categories == null || categories.isEmpty()) {
+                afficherMessageAucuneCategorie();
+                return;
+            }
+
+            // Créer un bouton pour chaque catégorie
+            for (String categorie : categories) {
+                if (categorie != null && !categorie.trim().isEmpty()) {
+                    Button categoryButton = createCategoryButton(categorie);
+                    categoriesContainer.getChildren().add(categoryButton);
+                }
+            }
+
+            System.out.println("✓ " + categories.size() + " catégorie(s) chargée(s)");
+
+        } catch (Exception e) {
+            System.err.println("Erreur lors du chargement des catégories: " + e.getMessage());
+            e.printStackTrace();
+            afficherErreurChargement();
         }
     }
-    
+
+    /**
+     * Crée un bouton pour une catégorie
+     */
     private Button createCategoryButton(String categorie) {
         // Créer un VBox pour contenir l'icône et le texte
         VBox content = new VBox(8);
         content.setAlignment(javafx.geometry.Pos.CENTER);
-        
+
         // Icône selon la catégorie
         String icon = getCategoryIcon(categorie);
         Label iconLabel = new Label(icon);
-        iconLabel.setStyle("-fx-font-size: 48px;");
-        
+        iconLabel.setStyle("-fx-font-size: " + ICON_SIZE + "px;");
+
         Label textLabel = new Label(categorie);
         textLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;");
         textLabel.setWrapText(true);
         textLabel.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
-        
+
         content.getChildren().addAll(iconLabel, textLabel);
-        
+
         Button button = new Button();
         button.setGraphic(content);
-        button.setPrefSize(220, 180);
+        button.setPrefSize(BUTTON_WIDTH, BUTTON_HEIGHT);
         button.setContentDisplay(javafx.scene.control.ContentDisplay.CENTER);
-        button.setStyle(
-            "-fx-font-size: 18px; " +
-            "-fx-font-weight: bold; " +
-            "-fx-background-color: linear-gradient(to bottom, #4CAF50, #2E7D32); " +
-            "-fx-text-fill: white; " +
-            "-fx-background-radius: 20; " +
-            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 12, 0, 0, 6); " +
-            "-fx-cursor: hand; " +
-            "-fx-padding: 15;"
-        );
-        
-        // Effet hover amélioré
-        button.setOnMouseEntered(e -> {
-            button.setStyle(
-                "-fx-font-size: 20px; " +
-                "-fx-font-weight: bold; " +
-                "-fx-background-color: linear-gradient(to bottom, #66BB6A, #4CAF50); " +
-                "-fx-text-fill: white; " +
-                "-fx-background-radius: 20; " +
-                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 18, 0, 0, 10); " +
-                "-fx-scale-x: 1.08; " +
-                "-fx-scale-y: 1.08; " +
-                "-fx-cursor: hand; " +
-                "-fx-padding: 15;"
-            );
-        });
-        
-        button.setOnMouseExited(e -> {
-            button.setStyle(
-                "-fx-font-size: 18px; " +
-                "-fx-font-weight: bold; " +
-                "-fx-background-color: linear-gradient(to bottom, #4CAF50, #2E7D32); " +
-                "-fx-text-fill: white; " +
-                "-fx-background-radius: 20; " +
-                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 12, 0, 0, 6); " +
-                "-fx-scale-x: 1.0; " +
-                "-fx-scale-y: 1.0; " +
-                "-fx-cursor: hand; " +
-                "-fx-padding: 15;"
-            );
-        });
-        
+        button.setStyle(STYLE_BUTTON_BASE);
+
+        // Effet hover
+        button.setOnMouseEntered(e -> button.setStyle(STYLE_BUTTON_HOVER));
+        button.setOnMouseExited(e -> button.setStyle(STYLE_BUTTON_BASE));
+
         button.setOnAction(e -> ouvrirCategorie(categorie));
-        
+
         return button;
     }
-    
+
+    /**
+     * Retourne l'icône appropriée pour une catégorie
+     */
     private String getCategoryIcon(String categorie) {
         String cat = categorie.toLowerCase();
         if (cat.contains("aliment") || cat.contains("food")) {
@@ -203,166 +248,223 @@ public class CaisseCategoriesController {
         }
         return "🏷️";
     }
-    
+
+    /**
+     * Affiche un message si aucune catégorie n'est disponible
+     */
+    private void afficherMessageAucuneCategorie() {
+        VBox messageBox = new VBox(15);
+        messageBox.setAlignment(javafx.geometry.Pos.CENTER);
+        messageBox.setStyle("-fx-padding: 40px;");
+
+        Label iconLabel = new Label("📭");
+        iconLabel.setStyle("-fx-font-size: 64px;");
+
+        Label messageLabel = new Label("Aucune catégorie disponible");
+        messageLabel.setStyle(
+                "-fx-font-size: 18px; " +
+                        "-fx-font-weight: bold; " +
+                        "-fx-text-fill: #999;"
+        );
+
+        Label infoLabel = new Label("Ajoutez des produits avec des catégories dans la gestion des stocks");
+        infoLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #666;");
+        infoLabel.setWrapText(true);
+        infoLabel.setMaxWidth(400);
+        infoLabel.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+
+        messageBox.getChildren().addAll(iconLabel, messageLabel, infoLabel);
+        categoriesContainer.getChildren().add(messageBox);
+    }
+
+    /**
+     * Affiche un message d'erreur en cas de problème de chargement
+     */
+    private void afficherErreurChargement() {
+        VBox errorBox = new VBox(15);
+        errorBox.setAlignment(javafx.geometry.Pos.CENTER);
+        errorBox.setStyle("-fx-padding: 40px;");
+
+        Label iconLabel = new Label("⚠️");
+        iconLabel.setStyle("-fx-font-size: 64px;");
+
+        Label errorLabel = new Label("Erreur de chargement");
+        errorLabel.setStyle(
+                "-fx-font-size: 18px; " +
+                        "-fx-font-weight: bold; " +
+                        "-fx-text-fill: #f44336;"
+        );
+
+        Label infoLabel = new Label("Impossible de charger les catégories. Vérifiez la connexion à la base de données.");
+        infoLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #666;");
+        infoLabel.setWrapText(true);
+        infoLabel.setMaxWidth(400);
+        infoLabel.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+
+        Button retryButton = new Button("🔄 Réessayer");
+        retryButton.setStyle(
+                "-fx-background-color: #2196F3; " +
+                        "-fx-text-fill: white; " +
+                        "-fx-font-weight: bold; " +
+                        "-fx-padding: 10 20; " +
+                        "-fx-background-radius: 5; " +
+                        "-fx-cursor: hand;"
+        );
+        retryButton.setOnAction(e -> chargerCategories());
+
+        errorBox.getChildren().addAll(iconLabel, errorLabel, infoLabel, retryButton);
+        categoriesContainer.getChildren().add(errorBox);
+
+        showAlert(Alert.AlertType.ERROR, "Erreur",
+                "Impossible de charger les catégories depuis la base de données.");
+    }
+
+    /**
+     * Ouvre la vue des produits d'une catégorie
+     */
     private void ouvrirCategorie(String categorie) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/CategorieProduits.fxml"));
-            VBox root = loader.load();
-            
+            javafx.scene.Parent root = loader.load();
+
             CategorieProduitsController controller = loader.getController();
             controller.setCategorie(categorie);
-            
+
             Stage stage = (Stage) panierButton.getScene().getWindow();
             stage.getScene().setRoot(root);
             stage.setTitle("Produits - " + categorie);
         } catch (IOException e) {
             System.err.println("Erreur lors du chargement de la page catégorie: " + e.getMessage());
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Erreur",
+                    "Impossible d'ouvrir la catégorie: " + e.getMessage());
         }
     }
-    
-    @FXML
-    private void handleVoirPanier() {
-        try {
-            Stage stage = (Stage) panierButton.getScene().getWindow();
-            util.FXMLUtils.changeScene(stage, "/view/Caisse.fxml", "Caisse - Point de Vente");
-        } catch (Exception e) {
-            showAlert(Alert.AlertType.ERROR, "Erreur", 
-                     "Erreur lors de l'ouverture du panier: " + e.getMessage());
-        }
-    }
-    
-    @FXML
-    private void handleDeconnexion() {
-        ConnexionController.deconnecter();
-        try {
-            Stage stage = (Stage) deconnexionButton.getScene().getWindow();
-            util.FXMLUtils.changeScene(stage, "/view/Connexion.fxml", "Connexion");
-        } catch (Exception e) {
-            showAlert(Alert.AlertType.ERROR, "Erreur", 
-                     "Erreur lors de la déconnexion: " + e.getMessage());
-        }
-    }
-    
-    private Produit produitTrouve = null; // Produit actuellement trouvé pour auto-ajout
-    
-    @FXML
-    private void handleRecherche() {
-        handleAjouterRapide();
-    }
-    
-    @FXML
-    private void handlePlusQuantite() {
-        try {
-            int quantite = Integer.parseInt(quantiteField.getText().trim());
-            quantite++;
-            quantiteField.setText(String.valueOf(quantite));
-        } catch (NumberFormatException e) {
-            quantiteField.setText("1");
-        }
-    }
-    
-    @FXML
-    private void handleMoinsQuantite() {
-        try {
-            int quantite = Integer.parseInt(quantiteField.getText().trim());
-            if (quantite > 1) {
-                quantite--;
-                quantiteField.setText(String.valueOf(quantite));
-            }
-        } catch (NumberFormatException e) {
-            quantiteField.setText("1");
-        }
-    }
-    
+
+    // ============================================
+    // GESTION DE LA RECHERCHE RAPIDE
+    // ============================================
+
+    /**
+     * Recherche un produit et affiche les informations
+     */
     private void rechercherProduit(String recherche) {
         produitTrouve = produitDAO.rechercherProduit(recherche);
-        
+
         if (produitTrouve != null) {
-            produitInfoLabel.setText("✓ " + produitTrouve.getNom() + " - " + 
-                                   String.format("%.2f €", produitTrouve.getPrixVenteDefaut()) + 
-                                   " (Stock: " + produitTrouve.getQuantiteStock() + ")");
+            produitInfoLabel.setText("✓ " + produitTrouve.getNom() + " - " +
+                    String.format("%.2f €", produitTrouve.getPrixVenteDefaut()) +
+                    " (Stock: " + produitTrouve.getQuantiteStock() + ")");
             produitInfoLabel.setStyle("-fx-text-fill: #4CAF50; -fx-font-weight: bold; -fx-font-size: 13px;");
-            
-            // Si c'est un code-barres (généralement numérique et long), ajouter automatiquement
-            if (recherche.matches("\\d+") && recherche.length() >= 8) {
-                // Code-barres détecté, ajouter automatiquement après un court délai
-                javafx.application.Platform.runLater(() -> {
-                    try {
-                        Thread.sleep(300); // Petit délai pour laisser le temps de voir l'info
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                    handleAjouterRapide();
-                });
+
+            // Ajout automatique pour code-barres
+            if (estCodeBarre(recherche)) {
+                ajouterAutomatiquementApresDelai();
             }
         } else {
             produitInfoLabel.setText("❌ Produit introuvable");
             produitInfoLabel.setStyle("-fx-text-fill: #f44336; -fx-font-weight: bold; -fx-font-size: 13px;");
         }
     }
-    
+
+    /**
+     * Vérifie si la recherche est un code-barres
+     */
+    private boolean estCodeBarre(String recherche) {
+        return recherche.matches("\\d+") && recherche.length() >= 8;
+    }
+
+    /**
+     * Ajoute automatiquement le produit après un court délai
+     */
+    private void ajouterAutomatiquementApresDelai() {
+        javafx.application.Platform.runLater(() -> {
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            handleAjouterRapide();
+        });
+    }
+
+    @FXML
+    private void handleRecherche() {
+        handleAjouterRapide();
+    }
+
     @FXML
     private void handleAjouterRapide() {
         String recherche = rechercheField.getText().trim();
-        
+
         if (recherche.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Recherche vide", 
-                     "Veuillez entrer un nom de produit ou un code-barres.");
+            showAlert(Alert.AlertType.WARNING, "Recherche vide",
+                    "Veuillez entrer un nom de produit ou un code-barres.");
             return;
         }
-        
+
         // Si produit déjà trouvé, utiliser celui-ci, sinon rechercher
         if (produitTrouve == null) {
             produitTrouve = produitDAO.rechercherProduit(recherche);
         }
-        
+
         if (produitTrouve == null) {
-            showAlert(Alert.AlertType.WARNING, "Produit introuvable", 
-                     "Aucun produit trouvé avec ce nom ou code-barres.");
-            rechercheField.clear();
-            produitInfoLabel.setText("");
+            showAlert(Alert.AlertType.WARNING, "Produit introuvable",
+                    "Aucun produit trouvé avec ce nom ou code-barres.");
+            reinitialiserRecherche();
             return;
         }
-        
+
         if (produitTrouve.getQuantiteStock() <= 0) {
-            showAlert(Alert.AlertType.WARNING, "Stock insuffisant", 
-                     "Ce produit n'est plus en stock.");
-            rechercheField.clear();
-            produitInfoLabel.setText("");
-            produitTrouve = null;
+            showAlert(Alert.AlertType.WARNING, "Stock insuffisant",
+                    "Ce produit n'est plus en stock.");
+            reinitialiserRecherche();
             return;
         }
-        
-        int quantite;
-        try {
-            quantite = Integer.parseInt(quantiteField.getText().trim());
-            if (quantite <= 0) {
-                throw new NumberFormatException();
-            }
-        } catch (NumberFormatException e) {
-            showAlert(Alert.AlertType.WARNING, "Quantité invalide", 
-                     "Veuillez entrer une quantité valide.");
+
+        int quantite = obtenirQuantite();
+        if (quantite <= 0) {
+            showAlert(Alert.AlertType.WARNING, "Quantité invalide",
+                    "Veuillez entrer une quantité valide.");
             return;
         }
-        
+
         if (quantite > produitTrouve.getQuantiteStock()) {
-            showAlert(Alert.AlertType.WARNING, "Stock insuffisant", 
-                     "Stock disponible: " + produitTrouve.getQuantiteStock());
+            showAlert(Alert.AlertType.WARNING, "Stock insuffisant",
+                    "Stock disponible: " + produitTrouve.getQuantiteStock());
             return;
         }
-        
-        // Ajouter au panier global
+
+        ajouterAuPanier(quantite);
+    }
+
+    /**
+     * Obtient la quantité saisie
+     */
+    private int obtenirQuantite() {
+        try {
+            int quantite = Integer.parseInt(quantiteField.getText().trim());
+            return quantite > 0 ? quantite : -1;
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    /**
+     * Ajoute un produit au panier
+     */
+    private void ajouterAuPanier(int quantite) {
         javafx.collections.ObservableList<DetailVente> panier = CategorieProduitsController.getPanierGlobal();
         DetailVente detailExistant = panier.stream()
-            .filter(d -> d.getProduitId() == produitTrouve.getId())
-            .findFirst()
-            .orElse(null);
-        
+                .filter(d -> d.getProduitId() == produitTrouve.getId())
+                .findFirst()
+                .orElse(null);
+
         if (detailExistant != null) {
             int nouvelleQuantite = detailExistant.getQuantite() + quantite;
             if (nouvelleQuantite > produitTrouve.getQuantiteStock()) {
-                showAlert(Alert.AlertType.WARNING, "Stock insuffisant", 
-                         "Quantité totale demandée dépasse le stock disponible.");
+                showAlert(Alert.AlertType.WARNING, "Stock insuffisant",
+                        "Quantité totale demandée dépasse le stock disponible.");
                 return;
             }
             detailExistant.setQuantite(nouvelleQuantite);
@@ -375,20 +477,87 @@ public class CaisseCategoriesController {
             detail.setProduit(produitTrouve);
             panier.add(detail);
         }
-        
+
         String nomProduit = produitTrouve.getNom();
-        
+        reinitialiserRecherche();
         updatePanierCount();
+        showAlert(Alert.AlertType.INFORMATION, "Produit ajouté",
+                nomProduit + " (" + quantite + "x) ajouté au panier !");
+    }
+
+    /**
+     * Réinitialise les champs de recherche
+     */
+    private void reinitialiserRecherche() {
         rechercheField.clear();
         quantiteField.setText("1");
         produitInfoLabel.setText("");
         produitTrouve = null;
         rechercheField.requestFocus();
-        
-        showAlert(Alert.AlertType.INFORMATION, "Produit ajouté", 
-                 nomProduit + " (" + quantite + "x) ajouté au panier !");
     }
-    
+
+    // ============================================
+    // GESTION DE LA QUANTITÉ
+    // ============================================
+
+    @FXML
+    private void handlePlusQuantite() {
+        try {
+            int quantite = Integer.parseInt(quantiteField.getText().trim());
+            quantite++;
+            quantiteField.setText(String.valueOf(quantite));
+        } catch (NumberFormatException e) {
+            quantiteField.setText("1");
+        }
+    }
+
+    @FXML
+    private void handleMoinsQuantite() {
+        try {
+            int quantite = Integer.parseInt(quantiteField.getText().trim());
+            if (quantite > 1) {
+                quantite--;
+                quantiteField.setText(String.valueOf(quantite));
+            }
+        } catch (NumberFormatException e) {
+            quantiteField.setText("1");
+        }
+    }
+
+    // ============================================
+    // NAVIGATION
+    // ============================================
+
+    @FXML
+    private void handleVoirPanier() {
+        try {
+            Stage stage = (Stage) panierButton.getScene().getWindow();
+            util.FXMLUtils.changeScene(stage, "/view/Caisse.fxml", "Caisse - Point de Vente");
+        } catch (Exception e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur",
+                    "Erreur lors de l'ouverture du panier: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleDeconnexion() {
+        ConnexionController.deconnecter();
+        try {
+            Stage stage = (Stage) deconnexionButton.getScene().getWindow();
+            util.FXMLUtils.changeScene(stage, "/view/Connexion.fxml", "Connexion");
+        } catch (Exception e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur",
+                    "Erreur lors de la déconnexion: " + e.getMessage());
+        }
+    }
+
+    // ============================================
+    // UTILITAIRES
+    // ============================================
+
+    /**
+     * Met à jour le compteur du panier
+     */
     private void updatePanierCount() {
         int count = 0;
         if (CategorieProduitsController.getPanierGlobal() != null) {
@@ -398,7 +567,10 @@ public class CaisseCategoriesController {
             panierCountLabel.setText("Panier: " + count);
         }
     }
-    
+
+    /**
+     * Affiche une alerte
+     */
     private void showAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
@@ -407,4 +579,3 @@ public class CaisseCategoriesController {
         alert.showAndWait();
     }
 }
-

@@ -15,7 +15,7 @@ import util.SecurityUtil;
  * DAO pour l'authentification et la gestion des utilisateurs
  */
 public class UtilisateurDAO {
-    
+
     /**
      * Authentifie un utilisateur
      * @param username Le nom d'utilisateur
@@ -24,13 +24,13 @@ public class UtilisateurDAO {
      */
     public Utilisateur authenticate(String username, String password) {
         String sql = "SELECT * FROM utilisateurs WHERE username = ?";
-        
+
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
-            
+
             if (rs.next()) {
                 // La colonne dans la base de données est password_hash (snake_case)
                 String passwordHash = rs.getString("password_hash");
@@ -46,10 +46,10 @@ public class UtilisateurDAO {
         } catch (SQLException e) {
             System.err.println("Erreur lors de l'authentification: " + e.getMessage());
         }
-        
+
         return null;
     }
-    
+
     /**
      * Récupère un utilisateur par son ID
      * @param id L'ID de l'utilisateur
@@ -57,13 +57,13 @@ public class UtilisateurDAO {
      */
     public Utilisateur findById(int id) {
         String sql = "SELECT * FROM utilisateurs WHERE id = ?";
-        
+
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
-            
+
             if (rs.next()) {
                 return new Utilisateur(
                     rs.getInt("id"),
@@ -75,10 +75,10 @@ public class UtilisateurDAO {
         } catch (SQLException e) {
             System.err.println("Erreur lors de la recherche d'utilisateur: " + e.getMessage());
         }
-        
+
         return null;
     }
-    
+
     /**
      * Récupère tous les utilisateurs
      * @return Liste de tous les utilisateurs
@@ -86,11 +86,11 @@ public class UtilisateurDAO {
     public List<Utilisateur> findAll() {
         List<Utilisateur> utilisateurs = new ArrayList<>();
         String sql = "SELECT * FROM utilisateurs ORDER BY username";
-        
+
         try (Connection conn = DBConnector.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
-            
+
             while (rs.next()) {
                 utilisateurs.add(new Utilisateur(
                     rs.getInt("id"),
@@ -102,10 +102,10 @@ public class UtilisateurDAO {
         } catch (SQLException e) {
             System.err.println("Erreur lors de la récupération des utilisateurs: " + e.getMessage());
         }
-        
+
         return utilisateurs;
     }
-    
+
     /**
      * Crée un nouvel utilisateur
      * @param utilisateur L'utilisateur à créer
@@ -113,16 +113,16 @@ public class UtilisateurDAO {
      */
     public boolean create(Utilisateur utilisateur) {
         String sql = "INSERT INTO utilisateurs (username, password_hash, role) VALUES (?, ?, ?)";
-        
+
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            
+
             stmt.setString(1, utilisateur.getUsername());
             stmt.setString(2, utilisateur.getPasswordHash());
             stmt.setString(3, utilisateur.getRole().name());
-            
+
             int rowsAffected = stmt.executeUpdate();
-            
+
             if (rowsAffected > 0) {
                 ResultSet rs = stmt.getGeneratedKeys();
                 if (rs.next()) {
@@ -133,10 +133,10 @@ public class UtilisateurDAO {
         } catch (SQLException e) {
             System.err.println("Erreur lors de la création d'utilisateur: " + e.getMessage());
         }
-        
+
         return false;
     }
-    
+
     /**
      * Met à jour un utilisateur
      * @param utilisateur L'utilisateur à mettre à jour
@@ -144,23 +144,23 @@ public class UtilisateurDAO {
      */
     public boolean update(Utilisateur utilisateur) {
         String sql = "UPDATE utilisateurs SET username = ?, password_hash = ?, role = ? WHERE id = ?";
-        
+
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
             stmt.setString(1, utilisateur.getUsername());
             stmt.setString(2, utilisateur.getPasswordHash());
             stmt.setString(3, utilisateur.getRole().name());
             stmt.setInt(4, utilisateur.getId());
-            
+
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Erreur lors de la mise à jour d'utilisateur: " + e.getMessage());
         }
-        
+
         return false;
     }
-    
+
     /**
      * Supprime un utilisateur
      * @param id L'ID de l'utilisateur à supprimer
@@ -168,19 +168,19 @@ public class UtilisateurDAO {
      */
     public boolean delete(int id) {
         String sql = "DELETE FROM utilisateurs WHERE id = ?";
-        
+
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
             stmt.setInt(1, id);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Erreur lors de la suppression d'utilisateur: " + e.getMessage());
         }
-        
+
         return false;
     }
-    
+
     /**
      * Vérifie si un nom d'utilisateur existe déjà
      * @param username Le nom d'utilisateur à vérifier
@@ -188,20 +188,20 @@ public class UtilisateurDAO {
      */
     public boolean usernameExists(String username) {
         String sql = "SELECT COUNT(*) FROM utilisateurs WHERE username = ?";
-        
+
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
-            
+
             if (rs.next()) {
                 return rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
             System.err.println("Erreur lors de la vérification du nom d'utilisateur: " + e.getMessage());
         }
-        
+
         return false;
     }
 }
