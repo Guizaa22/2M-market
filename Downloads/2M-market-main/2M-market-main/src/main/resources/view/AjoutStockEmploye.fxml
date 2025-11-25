@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane styleClass="root" stylesheets="@/styles/global.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.AjoutStockEmployeController">
+   <style>
+      -fx-background-image: url('/background/backgroundstock.jpg');
+      -fx-background-size: cover;
+      -fx-background-position: center;
+      -fx-background-repeat: no-repeat;
+   </style>
+   <children>
+      <VBox spacing="0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <!-- ========================================
+                 HEADER - Barre supérieure
+                 ======================================== -->
+            <HBox alignment="CENTER_LEFT" spacing="15" styleClass="header-bar">
+               <padding>
+                  <Insets bottom="20" left="30" right="30" top="20" />
+               </padding>
+               <children>
+                  <Label styleClass="header-title" text="📦 Ajout de Stock - Employé">
+                     <font>
+                        <Font name="System Bold" size="28.0" />
+                     </font>
+                  </Label>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Button fx:id="retourButton" onAction="#handleRetour" styleClass="btn, btn-secondary" text="◀ Retour" />
+               </children>
+            </HBox>
+
+            <!-- ========================================
+                 CONTENU PRINCIPAL
+                 ======================================== -->
+            <HBox spacing="20" VBox.vgrow="ALWAYS">
+               <padding>
+                  <Insets bottom="20" left="20" right="20" top="20" />
+               </padding>
+               <children>
+                  <!-- ========================================
+                       PANEL GAUCHE - Recherche & Ajout
+                       ======================================== -->
+                  <VBox spacing="20" styleClass="card" HBox.hgrow="SOMETIMES" minWidth="400" maxWidth="500">
+                     <padding>
+                        <Insets bottom="25" left="25" right="25" top="25" />
+                     </padding>
+                     <children>
+                        <Label styleClass="section-title" text="🔍 Rechercher un Produit">
+                           <font>
+                              <Font name="System Bold" size="20.0" />
+                           </font>
+                        </Label>
+
+                        <!-- Champ de recherche -->
+                        <VBox spacing="8">
+                           <Label style="-fx-font-weight: bold; -fx-font-size: 14px;" text="Code-barres ou Nom:" />
+                           <TextField fx:id="rechercheField" onAction="#handleRecherche" promptText="Entrez le code-barres ou le nom du produit..." styleClass="text-field" />
+                           <Button fx:id="rechercherButton" onAction="#handleRecherche" styleClass="btn, btn-primary" text="🔍 Rechercher" maxWidth="Infinity" />
+                        </VBox>
+
+                        <Separator />
+
+                        <!-- Informations produit trouvé -->
+                        <VBox fx:id="produitInfoBox" spacing="12" visible="false">
+                           <children>
+                              <Label styleClass="section-title" text="📋 Informations Produit" />
+                              
+                              <VBox spacing="8">
+                                 <HBox spacing="10">
+                                    <Label style="-fx-font-weight: bold; -fx-min-width: 120;" text="Nom:" />
+                                    <Label fx:id="nomLabel" style="-fx-font-size: 16px;" text="" />
+                                 </HBox>
+                                 <HBox spacing="10">
+                                    <Label style="-fx-font-weight: bold; -fx-min-width: 120;" text="Code-barres:" />
+                                    <Label fx:id="codeBarreLabel" style="-fx-font-size: 14px;" text="" />
+                                 </HBox>
+                                 <HBox spacing="10">
+                                    <Label style="-fx-font-weight: bold; -fx-min-width: 120;" text="Stock actuel:" />
+                                    <Label fx:id="stockActuelLabel" style="-fx-font-size: 16px; -fx-font-weight: bold;" text="" />
+                                 </HBox>
+                                 <HBox spacing="10">
+                                    <Label style="-fx-font-weight: bold; -fx-min-width: 120;" text="Prix vente:" />
+                                    <Label fx:id="prixVenteLabel" style="-fx-font-size: 14px;" text="" />
+                                 </HBox>
+                              </VBox>
+
+                              <Separator />
+
+                              <!-- Ajout de stock -->
+                              <VBox spacing="12">
+                                 <Label styleClass="section-title" text="➕ Ajouter au Stock" />
+                                 
+                                 <VBox spacing="8">
+                                    <Label style="-fx-font-weight: bold; -fx-font-size: 14px;" text="Quantité à ajouter:" />
+                                    <HBox alignment="CENTER" spacing="15">
+                                       <Button fx:id="moinsButton" onAction="#handleMoins" styleClass="btn, btn-secondary" text="➖" prefWidth="50" />
+                                       <TextField fx:id="quantiteField" styleClass="text-field" text="1" prefWidth="120" />
+                                       <Button fx:id="plusButton" onAction="#handlePlus" styleClass="btn, btn-secondary" text="➕" prefWidth="50" />
+                                    </HBox>
+                                 </VBox>
+
+                                 <Button fx:id="ajouterStockButton" onAction="#handleAjouterStock" styleClass="btn, btn-primary" text="✅ Ajouter au Stock" maxWidth="Infinity" prefHeight="50" />
+                              </VBox>
+                           </children>
+                        </VBox>
+
+                        <!-- Message si produit non trouvé -->
+                        <Label fx:id="messageLabel" style="-fx-font-size: 14px; -fx-text-alignment: center; -fx-wrap-text: true;" text="" visible="false" />
+                     </children>
+                  </VBox>
+
+                  <!-- ========================================
+                       PANEL DROIT - Liste des Produits
+                       ======================================== -->
+                  <VBox spacing="15" styleClass="card" HBox.hgrow="ALWAYS">
+                     <padding>
+                        <Insets bottom="25" left="25" right="25" top="25" />
+                     </padding>
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                           <Label styleClass="section-title" text="📦 Liste des Produits">
+                              <font>
+                                 <Font name="System Bold" size="20.0" />
+                              </font>
+                           </Label>
+                           <Region HBox.hgrow="ALWAYS" />
+                           <TextField fx:id="filtreField" onKeyReleased="#handleFiltre" promptText="Filtrer les produits..." styleClass="text-field" prefWidth="250" />
+                        </HBox>
+
+                        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background: transparent;">
+                           <content>
+                              <FlowPane fx:id="produitsContainer" hgap="15" vgap="15" />
+                           </content>
+                        </ScrollPane>
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>
+

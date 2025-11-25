@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane styleClass="root" stylesheets="@/styles/global.css" xmlns="http://javafx.com/javafx/23.0.1"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controller.GestionTabacController">
+   <style>
+      -fx-background-image: url('/background/backgroundtabaccaisse.jpg');
+      -fx-background-size: cover;
+      -fx-background-position: center;
+      -fx-background-repeat: no-repeat;
+   </style>
+   <children>
+      <VBox spacing="15" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+         <children>
+            <!-- Header -->
+            <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-background-color: linear-gradient(to right, #9C27B0, #7B1FA2); -fx-padding: 15;">
+               <children>
+                  <Label text="🚬 Caisse Tabac - Ventes Tabac/Puff/Terrea" textFill="WHITE" style="-fx-font-weight: bold; -fx-font-size: 20px;" />
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Button text="🔄 Rafraîchir" onAction="#handleRafraichir" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-pref-height: 40; -fx-pref-width: 150; -fx-cursor: hand;" />
+                  <Button text="◀ Retour" onAction="#handleRetour" style="-fx-background-color: #757575; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-pref-height: 40; -fx-pref-width: 120; -fx-cursor: hand;" />
+               </children>
+            </HBox>
+            
+            <!-- Statistiques Recettes -->
+            <VBox spacing="10" style="-fx-padding: 15; -fx-background-color: #f5f5f5;">
+               <children>
+                  <Label text="📊 Statistiques des Recettes" style="-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: #333;" />
+                  <HBox spacing="15" alignment="CENTER">
+                     <children>
+                        <VBox alignment="CENTER" spacing="5" style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15; -fx-pref-width: 180; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);">
+                           <children>
+                              <Label text="💰 Aujourd'hui" style="-fx-font-size: 12px; -fx-text-fill: #666;" />
+                              <Label fx:id="recetteAujourdhuiLabel" text="0,00 €" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #4CAF50;" />
+                           </children>
+                        </VBox>
+                        <VBox alignment="CENTER" spacing="5" style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15; -fx-pref-width: 180; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);">
+                           <children>
+                              <Label text="📅 Cette Semaine" style="-fx-font-size: 12px; -fx-text-fill: #666;" />
+                              <Label fx:id="recetteSemaineLabel" text="0,00 €" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2196F3;" />
+                           </children>
+                        </VBox>
+                        <VBox alignment="CENTER" spacing="5" style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15; -fx-pref-width: 180; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);">
+                           <children>
+                              <Label text="📆 Ce Mois" style="-fx-font-size: 12px; -fx-text-fill: #666;" />
+                              <Label fx:id="recetteMoisLabel" text="0,00 €" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #FF9800;" />
+                           </children>
+                        </VBox>
+                        <VBox alignment="CENTER" spacing="5" style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15; -fx-pref-width: 180; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);">
+                           <children>
+                              <Label text="📈 Total Général" style="-fx-font-size: 12px; -fx-text-fill: #666;" />
+                              <Label fx:id="totalTabacLabel" text="0,00 €" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #9C27B0;" />
+                           </children>
+                        </VBox>
+                        <VBox alignment="CENTER" spacing="5" style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 15; -fx-pref-width: 180; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);">
+                           <children>
+                              <Label text="🛒 Nombre de Ventes" style="-fx-font-size: 12px; -fx-text-fill: #666;" />
+                              <Label fx:id="nombreVentesLabel" text="0" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #607D8B;" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+            
+            <!-- Meilleurs Produits et Tables -->
+            <HBox spacing="15" VBox.vgrow="ALWAYS" style="-fx-padding: 15;">
+               <children>
+                  <!-- Meilleurs Produits -->
+                  <VBox spacing="10" prefWidth="300" HBox.hgrow="NEVER">
+                     <children>
+                        <Label text="🏆 Meilleurs Produits Achetés" style="-fx-font-weight: bold; -fx-font-size: 16px;" />
+                        <TableView fx:id="topProduitsTable" VBox.vgrow="ALWAYS">
+                           <columns>
+                              <TableColumn fx:id="produitTopColumn" text="Produit" prefWidth="150" />
+                              <TableColumn fx:id="quantiteTopColumn" text="Quantité" prefWidth="70" />
+                              <TableColumn fx:id="caTopColumn" text="CA Total" prefWidth="80" />
+                           </columns>
+                        </TableView>
+                     </children>
+                  </VBox>
+                  
+                  <!-- Table des ventes -->
+                  <VBox VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS" spacing="10">
+                     <children>
+                        <Label text="📋 Ventes de Tabac" style="-fx-font-weight: bold; -fx-font-size: 16px;" />
+                        <TableView fx:id="ventesTabacTable" VBox.vgrow="ALWAYS">
+                           <columns>
+                              <TableColumn fx:id="idColumn" text="ID" prefWidth="60" />
+                              <TableColumn fx:id="dateColumn" text="Date" prefWidth="150" />
+                              <TableColumn fx:id="totalColumn" text="Total" prefWidth="100" />
+                              <TableColumn fx:id="utilisateurColumn" text="Utilisateur ID" prefWidth="100" />
+                           </columns>
+                        </TableView>
+                     </children>
+                  </VBox>
+                  
+                  <!-- Table des détails -->
+                  <VBox VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS" spacing="10">
+                     <children>
+                        <Label text="📝 Détails de la Vente Sélectionnée" style="-fx-font-weight: bold; -fx-font-size: 16px;" />
+                        <TableView fx:id="detailsTable" VBox.vgrow="ALWAYS">
+                           <columns>
+                              <TableColumn fx:id="produitColumn" text="Produit" prefWidth="200" />
+                              <TableColumn fx:id="quantiteColumn" text="Quantité" prefWidth="80" />
+                              <TableColumn fx:id="prixColumn" text="Prix Unitaire" prefWidth="100" />
+                              <TableColumn fx:id="sousTotalColumn" text="Sous-Total" prefWidth="100" />
+                           </columns>
+                        </TableView>
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>
