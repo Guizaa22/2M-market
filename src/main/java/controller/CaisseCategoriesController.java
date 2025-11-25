@@ -478,11 +478,9 @@ public class CaisseCategoriesController {
             panier.add(detail);
         }
 
-        String nomProduit = produitTrouve.getNom();
+        // Ajout automatique sans popup
         reinitialiserRecherche();
         updatePanierCount();
-        showAlert(Alert.AlertType.INFORMATION, "Produit ajouté",
-                nomProduit + " (" + quantite + "x) ajouté au panier !");
     }
 
     /**

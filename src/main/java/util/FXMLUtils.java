@@ -1,11 +1,11 @@
 package util;
 
+import java.io.IOException;
+
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-
-import java.io.IOException;
 
 /**
  * Classe utilitaire pour charger les vues FXML
@@ -35,7 +35,14 @@ public class FXMLUtils {
         Scene scene = new Scene(root);
         stage.setScene(scene);
         stage.setTitle(title);
-        stage.centerOnScreen();
+        
+        // Mode plein écran pour les vues de caisse (tactile monitor)
+        if (fxmlPath.contains("Caisse") || fxmlPath.contains("Categorie")) {
+            stage.setFullScreen(true);
+            stage.setFullScreenExitHint("Appuyez sur Échap pour quitter le mode plein écran");
+        } else {
+            stage.centerOnScreen();
+        }
     }
     
     /**

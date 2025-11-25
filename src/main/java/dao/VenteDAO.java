@@ -1,7 +1,12 @@
 package dao;
 
 import java.math.BigDecimal;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -264,6 +269,115 @@ public class VenteDAO {
         return BigDecimal.ZERO;
     }
 
+    /**
+     * Récupère les ventes contenant des produits de tabac (tabac, puff, terrea, etc.)
+     * @return Liste des ventes avec produits de tabac
+     */
+    public List<Vente> findVentesTabac() {
+        List<Vente> ventes = new ArrayList<>();
+        String sql = """
+            SELECT DISTINCT v.* 
+            FROM ventes v
+            INNER JOIN detailsvente dv ON v.id = dv.id_vente
+            INNER JOIN produits p ON dv.id_produit = p.id
+            WHERE LOWER(p.categorie) LIKE '%tabac%' 
+               OR LOWER(p.categorie) LIKE '%puff%' 
+               OR LOWER(p.categorie) LIKE '%terrea%'
+               OR LOWER(p.categorie) LIKE '%cigarette%'
+            ORDER BY v.date_vente DESC
+            """;
+        
+        try (Connection conn = DBConnector.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            
+            while (rs.next()) {
+                ventes.add(mapResultSetToVente(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération des ventes de tabac: " + e.getMessage());
+        }
+        
+        return ventes;
+    }
+    
+    /**
+     * Calcule le total des ventes de tabac sur une période
+     */
+    public BigDecimal getTotalVentesTabac(LocalDateTime debut, LocalDateTime fin) {
+        String sql = """
+            SELECT SUM(dv.prix_vente_unitaire * dv.quantite)
+            FROM detailsvente dv
+            INNER JOIN ventes v ON dv.id_vente = v.id
+            INNER JOIN produits p ON dv.id_produit = p.id
+            WHERE v.date_vente BETWEEN ? AND ?
+              AND (LOWER(p.categorie) LIKE '%tabac%' 
+               OR LOWER(p.categorie) LIKE '%puff%' 
+               OR LOWER(p.categorie) LIKE '%terrea%'
+               OR LOWER(p.categorie) LIKE '%cigarette%')
+            """;
+        
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setTimestamp(1, Timestamp.valueOf(debut));
+            stmt.setTimestamp(2, Timestamp.valueOf(fin));
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                BigDecimal total = rs.getBigDecimal(1);
+                return total != null ? total : BigDecimal.ZERO;
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors du calcul du total des ventes de tabac: " + e.getMessage());
+        }
+        
+        return BigDecimal.ZERO;
+    }
+    
+    /**
+     * Récupère les meilleurs produits de tabac (par quantité vendue)
+     * @param limit Nombre de produits à retourner
+     * @return Liste des statistiques des produits (nom, quantité totale, CA total)
+     */
+    public java.util.List<java.util.Map<String, Object>> getTopProduitsTabac(int limit) {
+        java.util.List<java.util.Map<String, Object>> topProduits = new java.util.ArrayList<>();
+        String sql = """
+            SELECT p.nom, 
+                   SUM(dv.quantite) as quantite_totale, 
+                   SUM(dv.prix_vente_unitaire * dv.quantite) as ca_total
+            FROM detailsvente dv
+            INNER JOIN ventes v ON dv.id_vente = v.id
+            INNER JOIN produits p ON dv.id_produit = p.id
+            WHERE LOWER(p.categorie) LIKE '%tabac%' 
+               OR LOWER(p.categorie) LIKE '%puff%' 
+               OR LOWER(p.categorie) LIKE '%terrea%'
+               OR LOWER(p.categorie) LIKE '%cigarette%'
+            GROUP BY p.id, p.nom
+            ORDER BY quantite_totale DESC
+            LIMIT ?
+            """;
+        
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, limit);
+            ResultSet rs = stmt.executeQuery();
+            
+            while (rs.next()) {
+                java.util.Map<String, Object> produit = new java.util.HashMap<>();
+                produit.put("nom", rs.getString("nom"));
+                produit.put("quantite", rs.getInt("quantite_totale"));
+                produit.put("ca", rs.getBigDecimal("ca_total") != null ? rs.getBigDecimal("ca_total") : BigDecimal.ZERO);
+                topProduits.add(produit);
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération des meilleurs produits de tabac: " + e.getMessage());
+        }
+        
+        return topProduits;
+    }
+    
     /**
      * Mapping ResultSet → Vente
      */

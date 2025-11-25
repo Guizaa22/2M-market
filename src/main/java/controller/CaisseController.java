@@ -150,65 +150,168 @@ public class CaisseController {
         
         HBox row = new HBox(15);
         row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        row.setPadding(new Insets(10));
-        row.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);");
-        row.setPrefHeight(80);
+        row.setPadding(new Insets(15));
+        row.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 10, 0, 0, 4); -fx-border-color: #e0e0e0; -fx-border-width: 1; -fx-border-radius: 12;");
+        row.setPrefHeight(120);
+        row.setMinHeight(120);
+        
+        // Effet hover pour tactile
+        row.setOnMouseEntered(e -> {
+            row.setStyle("-fx-background-color: linear-gradient(to right, #f9f9f9, #f5f5f5); -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(76, 175, 80, 0.3), 15, 0, 0, 6); -fx-border-color: #4CAF50; -fx-border-width: 2; -fx-border-radius: 12;");
+        });
+        row.setOnMouseExited(e -> {
+            row.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 10, 0, 0, 4); -fx-border-color: #e0e0e0; -fx-border-width: 1; -fx-border-radius: 12;");
+        });
         
         // Icône produit (placeholder)
         Label iconLabel = new Label("📦");
-        iconLabel.setStyle("-fx-font-size: 32px;");
+        iconLabel.setStyle("-fx-font-size: 48px;");
         
         // Informations produit
-        VBox infoBox = new VBox(5);
-        infoBox.setPrefWidth(200);
+        VBox infoBox = new VBox(8);
+        infoBox.setPrefWidth(300);
+        infoBox.setMinWidth(300);
         
         Label nomLabel = new Label(finalProduit != null ? finalProduit.getNom() : "Produit ID: " + finalDetail.getProduitId());
-        nomLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #333;");
+        nomLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #333;");
         nomLabel.setWrapText(true);
         
-        Label descLabel = new Label(finalProduit != null ? finalProduit.getCodeBarre() : "N/A");
-        descLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #666;");
+        Label descLabel = new Label("📋 " + (finalProduit != null ? finalProduit.getCodeBarre() : "N/A"));
+        descLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #666;");
         
-        infoBox.getChildren().addAll(nomLabel, descLabel);
+        String unite = finalProduit != null ? finalProduit.getUnite() : "unité";
+        Label prixUnitaireLabel = new Label("Prix: € " + String.format("%.2f", finalDetail.getPrixVenteUnitaire()) + " / " + unite);
+        prixUnitaireLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #999;");
         
-        // Contrôles de quantité
-        HBox quantiteBox = new HBox(5);
+        infoBox.getChildren().addAll(nomLabel, descLabel, prixUnitaireLabel);
+        
+        // Contrôles de quantité (plus grands pour tactile)
+        VBox quantiteContainer = new VBox(5);
+        quantiteContainer.setAlignment(javafx.geometry.Pos.CENTER);
+        
+        Label quantiteTitleLabel = new Label("Quantité (" + unite + ")");
+        quantiteTitleLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #666; -fx-alignment: center;");
+        
+        HBox quantiteBox = new HBox(8);
         quantiteBox.setAlignment(javafx.geometry.Pos.CENTER);
         
+        // Déclarer quantiteLabel avant les boutons pour l'utiliser dans les lambdas
         Label quantiteLabel = new Label(String.valueOf(finalDetail.getQuantite()));
-        quantiteLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-pref-width: 40; -fx-alignment: center;");
+        quantiteLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-pref-width: 60; -fx-alignment: center; -fx-text-fill: #333;");
         
-        Button moinsButton = new Button("-");
-        moinsButton.setPrefSize(30, 30);
-        moinsButton.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;");
+        Button moinsButton = new Button("➖");
+        moinsButton.setPrefSize(50, 50);
+        moinsButton.setMinSize(50, 50);
+        moinsButton.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 20px; -fx-background-radius: 10; -fx-cursor: hand;");
+        moinsButton.setOnMouseEntered(e -> {
+            moinsButton.setStyle("-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 20px; -fx-background-radius: 10; -fx-cursor: hand; -fx-scale-x: 1.1; -fx-scale-y: 1.1;");
+        });
+        moinsButton.setOnMouseExited(e -> {
+            moinsButton.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 20px; -fx-background-radius: 10; -fx-cursor: hand; -fx-scale-x: 1.0; -fx-scale-y: 1.0;");
+        });
         moinsButton.setOnAction(e -> {
             if (finalDetail.getQuantite() > 1) {
                 finalDetail.setQuantite(finalDetail.getQuantite() - 1);
                 quantiteLabel.setText(String.valueOf(finalDetail.getQuantite()));
                 rafraichirPanier();
                 calculerTotal();
+            } else {
+                // Si quantité = 1, proposer de retirer
+                Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+                confirmAlert.setTitle("Retirer le produit");
+                confirmAlert.setHeaderText(null);
+                confirmAlert.setContentText("Voulez-vous retirer ce produit du panier ?");
+                if (confirmAlert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+                    panierList.remove(finalDetail);
+                    rafraichirPanier();
+                    calculerTotal();
+                }
             }
         });
         
-        Button plusButton = new Button("+");
-        plusButton.setPrefSize(30, 30);
-        plusButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;");
+        Button plusButton = new Button("➕");
+        plusButton.setPrefSize(50, 50);
+        plusButton.setMinSize(50, 50);
+        plusButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 20px; -fx-background-radius: 10; -fx-cursor: hand;");
+        plusButton.setOnMouseEntered(e -> {
+            plusButton.setStyle("-fx-background-color: #388E3C; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 20px; -fx-background-radius: 10; -fx-cursor: hand; -fx-scale-x: 1.1; -fx-scale-y: 1.1;");
+        });
+        plusButton.setOnMouseExited(e -> {
+            plusButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 20px; -fx-background-radius: 10; -fx-cursor: hand; -fx-scale-x: 1.0; -fx-scale-y: 1.0;");
+        });
         plusButton.setOnAction(e -> {
             if (finalProduit != null && finalDetail.getQuantite() < finalProduit.getQuantiteStock()) {
                 finalDetail.setQuantite(finalDetail.getQuantite() + 1);
                 quantiteLabel.setText(String.valueOf(finalDetail.getQuantite()));
                 rafraichirPanier();
                 calculerTotal();
+            } else {
+                showAlert(Alert.AlertType.WARNING, "Stock insuffisant", 
+                         "Stock disponible: " + (finalProduit != null ? finalProduit.getQuantiteStock() : 0));
             }
         });
         
         quantiteBox.getChildren().addAll(moinsButton, quantiteLabel, plusButton);
+        quantiteContainer.getChildren().addAll(quantiteTitleLabel, quantiteBox);
         
-        // Prix
+        // Prix total
+        VBox prixContainer = new VBox(5);
+        prixContainer.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+        prixContainer.setPrefWidth(150);
+        
+        Label prixTitleLabel = new Label("Total");
+        prixTitleLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #666;");
+        
         Label prixLabel = new Label("€ " + String.format("%.2f", finalDetail.getSousTotal()));
-        prixLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #4CAF50; -fx-pref-width: 80; -fx-alignment: center-right;");
+        prixLabel.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #4CAF50; -fx-alignment: center-right;");
         
-        row.getChildren().addAll(iconLabel, infoBox, quantiteBox, prixLabel);
+        prixContainer.getChildren().addAll(prixTitleLabel, prixLabel);
+        
+        // Boutons d'action (Retirer et Modifier)
+        VBox actionsBox = new VBox(10);
+        actionsBox.setAlignment(javafx.geometry.Pos.CENTER);
+        actionsBox.setSpacing(10);
+        
+        Button retirerButton = new Button("🗑️ Retirer");
+        retirerButton.setPrefSize(120, 45);
+        retirerButton.setMinSize(120, 45);
+        retirerButton.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 8; -fx-cursor: hand;");
+        retirerButton.setOnMouseEntered(e -> {
+            retirerButton.setStyle("-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 8; -fx-cursor: hand; -fx-scale-x: 1.05; -fx-scale-y: 1.05;");
+        });
+        retirerButton.setOnMouseExited(e -> {
+            retirerButton.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 8; -fx-cursor: hand; -fx-scale-x: 1.0; -fx-scale-y: 1.0;");
+        });
+        retirerButton.setOnAction(e -> {
+            Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmAlert.setTitle("Retirer le produit");
+            confirmAlert.setHeaderText(null);
+            confirmAlert.setContentText("Voulez-vous retirer \"" + (finalProduit != null ? finalProduit.getNom() : "ce produit") + "\" du panier ?");
+            if (confirmAlert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+                panierList.remove(finalDetail);
+                rafraichirPanier();
+                calculerTotal();
+            }
+        });
+        
+        Button modifierButton = new Button("✏️ Modifier");
+        modifierButton.setPrefSize(120, 45);
+        modifierButton.setMinSize(120, 45);
+        modifierButton.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 8; -fx-cursor: hand;");
+        modifierButton.setOnMouseEntered(e -> {
+            modifierButton.setStyle("-fx-background-color: #1976D2; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 8; -fx-cursor: hand; -fx-scale-x: 1.05; -fx-scale-y: 1.05;");
+        });
+        modifierButton.setOnMouseExited(e -> {
+            modifierButton.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 8; -fx-cursor: hand; -fx-scale-x: 1.0; -fx-scale-y: 1.0;");
+        });
+        modifierButton.setOnAction(e -> {
+            // Ouvrir la recherche pour modifier
+            handleRechercheProduit();
+        });
+        
+        actionsBox.getChildren().addAll(retirerButton, modifierButton);
+        
+        row.getChildren().addAll(iconLabel, infoBox, quantiteContainer, prixContainer, actionsBox);
         
         return row;
     }
@@ -497,25 +600,25 @@ public class CaisseController {
     @FXML
     private void handlePaiementEspeces() {
         modePaiement = "Espèces";
-        especesButton.setStyle("-fx-background-color: #2E7D32; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
-        carteButton.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
-        autreButton.setStyle("-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
+        especesButton.setStyle("-fx-background-color: linear-gradient(to bottom, #2E7D32, #1B5E20); -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 10; -fx-pref-height: 70; -fx-pref-width: 180; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 3);");
+        carteButton.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 10; -fx-pref-height: 70; -fx-pref-width: 180; -fx-cursor: hand;");
+        autreButton.setStyle("-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 10; -fx-pref-height: 70; -fx-pref-width: 180; -fx-cursor: hand;");
     }
     
     @FXML
     private void handlePaiementCarte() {
         modePaiement = "Carte Bancaire";
-        especesButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
-        carteButton.setStyle("-fx-background-color: #1565C0; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
-        autreButton.setStyle("-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
+        especesButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 10; -fx-pref-height: 70; -fx-pref-width: 180; -fx-cursor: hand;");
+        carteButton.setStyle("-fx-background-color: linear-gradient(to bottom, #1565C0, #0D47A1); -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 10; -fx-pref-height: 70; -fx-pref-width: 180; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 3);");
+        autreButton.setStyle("-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 10; -fx-pref-height: 70; -fx-pref-width: 180; -fx-cursor: hand;");
     }
     
     @FXML
     private void handlePaiementAutre() {
         modePaiement = "Autre";
-        especesButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
-        carteButton.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
-        autreButton.setStyle("-fx-background-color: #F57C00; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 50; -fx-pref-width: 250; -fx-cursor: hand;");
+        especesButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 10; -fx-pref-height: 70; -fx-pref-width: 180; -fx-cursor: hand;");
+        carteButton.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 10; -fx-pref-height: 70; -fx-pref-width: 180; -fx-cursor: hand;");
+        autreButton.setStyle("-fx-background-color: linear-gradient(to bottom, #F57C00, #E65100); -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 10; -fx-pref-height: 70; -fx-pref-width: 180; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 3);");
     }
     
     @FXML

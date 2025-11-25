@@ -203,7 +203,7 @@
 }
 
 /* ============================================
-   CARTES PANIER
+   CARTES PANIER (TACTILE OPTIMIZED)
    ============================================ */
 
 .panier-card {
@@ -215,6 +215,7 @@
     -fx-border-radius: 12;
     -fx-cursor: hand;
     -fx-transition: all 0.3s ease;
+    -fx-min-height: 120px;
 }
 
 .panier-card:hover {
@@ -224,6 +225,24 @@
     -fx-border-width: 2;
     -fx-scale-x: 1.02;
     -fx-scale-y: 1.02;
+}
+
+/* Boutons tactiles - taille minimale pour interaction facile */
+.button {
+    -fx-min-height: 50px;
+    -fx-min-width: 100px;
+    -fx-font-size: 16px;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.button:pressed {
+    -fx-scale-x: 0.95;
+    -fx-scale-y: 0.95;
 }
 
 /* ============================================

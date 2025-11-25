@@ -98,6 +98,45 @@
                         </children>
                      </VBox>
 
+                     <!-- GESTION TABAC -->
+                     <VBox alignment="CENTER" spacing="15">
+                        <children>
+                           <Button fx:id="gestionTabacButton"
+                                   text="Caisse Tabac"
+                                   onAction="#handleGestionTabac"
+                                   prefHeight="80" prefWidth="200"
+                                   style="-fx-background-color: #9C27B0; -fx-text-fill: white; -fx-font-weight: bold;
+                                                   -fx-font-size: 16px; -fx-background-radius: 8; -fx-cursor: hand;" />
+                           <Label text="Ventes Tabac/Puff/Terrea" textAlignment="CENTER"/>
+                        </children>
+                     </VBox>
+
+                     <!-- VISUALISATION PRODUITS -->
+                     <VBox alignment="CENTER" spacing="15">
+                        <children>
+                           <Button fx:id="visualisationProduitsButton"
+                                   text="Visualisation Produits"
+                                   onAction="#handleVisualisationProduits"
+                                   prefHeight="80" prefWidth="200"
+                                   style="-fx-background-color: #00BCD4; -fx-text-fill: white; -fx-font-weight: bold;
+                                                   -fx-font-size: 16px; -fx-background-radius: 8; -fx-cursor: hand;" />
+                           <Label text="Voir tous les produits" textAlignment="CENTER"/>
+                        </children>
+                     </VBox>
+
+                     <!-- AJOUT STOCK MOBILE -->
+                     <VBox alignment="CENTER" spacing="15">
+                        <children>
+                           <Button fx:id="ajoutStockMobileButton"
+                                   text="📱 Ajout Stock Mobile"
+                                   onAction="#handleAjoutStockMobile"
+                                   prefHeight="80" prefWidth="200"
+                                   style="-fx-background-color: #E91E63; -fx-text-fill: white; -fx-font-weight: bold;
+                                                   -fx-font-size: 16px; -fx-background-radius: 8; -fx-cursor: hand;" />
+                           <Label text="Scanner &amp; Ajouter" textAlignment="CENTER"/>
+                        </children>
+                     </VBox>
+
                   </children>
                </HBox>
             </children>

@@ -13,6 +13,7 @@ public class Produit {
     private BigDecimal prixAchatActuel;
     private BigDecimal prixVenteDefaut;
     private int quantiteStock;
+    private String unite; // kg, grammes, unité, litre, etc.
     private int seuilAlerte;
     
     // Constructeurs
@@ -20,18 +21,19 @@ public class Produit {
     }
     
     public Produit(String codeBarre, String nom, String categorie, BigDecimal prixAchatActuel, 
-                   BigDecimal prixVenteDefaut, int quantiteStock, int seuilAlerte) {
+                   BigDecimal prixVenteDefaut, int quantiteStock, String unite, int seuilAlerte) {
         this.codeBarre = codeBarre;
         this.nom = nom;
         this.categorie = categorie;
         this.prixAchatActuel = prixAchatActuel;
         this.prixVenteDefaut = prixVenteDefaut;
         this.quantiteStock = quantiteStock;
+        this.unite = unite != null ? unite : "unité";
         this.seuilAlerte = seuilAlerte;
     }
     
     public Produit(int id, String codeBarre, String nom, String categorie, BigDecimal prixAchatActuel, 
-                   BigDecimal prixVenteDefaut, int quantiteStock, int seuilAlerte) {
+                   BigDecimal prixVenteDefaut, int quantiteStock, String unite, int seuilAlerte) {
         this.id = id;
         this.codeBarre = codeBarre;
         this.nom = nom;
@@ -39,6 +41,7 @@ public class Produit {
         this.prixAchatActuel = prixAchatActuel;
         this.prixVenteDefaut = prixVenteDefaut;
         this.quantiteStock = quantiteStock;
+        this.unite = unite != null ? unite : "unité";
         this.seuilAlerte = seuilAlerte;
     }
     
@@ -107,8 +110,26 @@ public class Produit {
         this.seuilAlerte = seuilAlerte;
     }
     
+    public String getUnite() {
+        return unite != null ? unite : "unité";
+    }
+    
+    public void setUnite(String unite) {
+        this.unite = unite != null ? unite : "unité";
+    }
+    
     public boolean isStockFaible() {
         return quantiteStock <= seuilAlerte;
+    }
+    
+    /**
+     * Vérifie si le produit est de type tabac (tabac, puff, terrea, etc.)
+     */
+    public boolean isTabac() {
+        if (categorie == null) return false;
+        String catLower = categorie.toLowerCase();
+        return catLower.contains("tabac") || catLower.contains("puff") || 
+               catLower.contains("terrea") || catLower.contains("cigarette");
     }
     
     @Override

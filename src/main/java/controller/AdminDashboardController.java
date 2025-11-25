@@ -32,6 +32,15 @@ public class AdminDashboardController {
     private Button gestionUtilisateursButton;
     
     @FXML
+    private Button gestionTabacButton;
+    
+    @FXML
+    private Button visualisationProduitsButton;
+    
+    @FXML
+    private Button ajoutStockMobileButton;
+    
+    @FXML
     private Button deconnexionButton;
     
     private Utilisateur utilisateur;
@@ -97,6 +106,42 @@ public class AdminDashboardController {
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+    
+    @FXML
+    private void handleGestionTabac() {
+        try {
+            Stage stage = (Stage) gestionTabacButton.getScene().getWindow();
+            FXMLUtils.changeScene(stage, "/view/GestionTabac.fxml", "Caisse Tabac - Ventes Tabac/Puff/Terrea");
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", 
+                     "Erreur lors du chargement de la gestion des ventes de tabac: " + e.getMessage());
+        }
+    }
+    
+    @FXML
+    private void handleVisualisationProduits() {
+        try {
+            Stage stage = (Stage) visualisationProduitsButton.getScene().getWindow();
+            FXMLUtils.changeScene(stage, "/view/VisualisationProduits.fxml", "Visualisation des Produits");
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", 
+                     "Erreur lors du chargement de la visualisation des produits: " + e.getMessage());
+        }
+    }
+    
+    @FXML
+    private void handleAjoutStockMobile() {
+        try {
+            Stage stage = (Stage) ajoutStockMobileButton.getScene().getWindow();
+            FXMLUtils.changeScene(stage, "/view/AjoutStockMobile.fxml", "Ajout Rapide de Stock - Mobile");
+            // Mode plein écran pour mobile
+            stage.setFullScreen(true);
+            stage.setFullScreenExitHint("Appuyez sur Échap pour quitter le mode plein écran");
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", 
+                     "Erreur lors du chargement de l'ajout de stock mobile: " + e.getMessage());
         }
     }
 

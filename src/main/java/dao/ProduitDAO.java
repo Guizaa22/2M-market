@@ -154,19 +154,31 @@ public class ProduitDAO {
      * @return true si la création réussit, false sinon
      */
     public boolean create(Produit produit) {
-        String sql = "INSERT INTO produits (code_barre, nom, categorie, prix_achat_actuel, prix_vente_defaut, quantite_stock, seuil_alerte) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        // Vérifier si la colonne unite existe
+        boolean hasUnite = columnExists("unite");
+        String sql;
+        if (hasUnite) {
+            sql = "INSERT INTO produits (code_barre, nom, categorie, prix_achat_actuel, prix_vente_defaut, quantite_stock, unite, seuil_alerte) " +
+                  "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        } else {
+            sql = "INSERT INTO produits (code_barre, nom, categorie, prix_achat_actuel, prix_vente_defaut, quantite_stock, seuil_alerte) " +
+                  "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        }
         
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             
-            stmt.setString(1, produit.getCodeBarre());
-            stmt.setString(2, produit.getNom());
-            stmt.setString(3, produit.getCategorie() != null ? produit.getCategorie() : "");
-            stmt.setBigDecimal(4, produit.getPrixAchatActuel());
-            stmt.setBigDecimal(5, produit.getPrixVenteDefaut());
-            stmt.setInt(6, produit.getQuantiteStock());
-            stmt.setInt(7, produit.getSeuilAlerte());
+            int paramIndex = 1;
+            stmt.setString(paramIndex++, produit.getCodeBarre());
+            stmt.setString(paramIndex++, produit.getNom());
+            stmt.setString(paramIndex++, produit.getCategorie() != null ? produit.getCategorie() : "");
+            stmt.setBigDecimal(paramIndex++, produit.getPrixAchatActuel());
+            stmt.setBigDecimal(paramIndex++, produit.getPrixVenteDefaut());
+            stmt.setInt(paramIndex++, produit.getQuantiteStock());
+            if (hasUnite) {
+                stmt.setString(paramIndex++, produit.getUnite());
+            }
+            stmt.setInt(paramIndex++, produit.getSeuilAlerte());
             
             int rowsAffected = stmt.executeUpdate();
             
@@ -190,20 +202,32 @@ public class ProduitDAO {
      * @return true si la mise à jour réussit, false sinon
      */
     public boolean update(Produit produit) {
-        String sql = "UPDATE produits SET code_barre = ?, nom = ?, categorie = ?, prix_achat_actuel = ?, " +
-                     "prix_vente_defaut = ?, quantite_stock = ?, seuil_alerte = ? WHERE id = ?";
+        // Vérifier si la colonne unite existe
+        boolean hasUnite = columnExists("unite");
+        String sql;
+        if (hasUnite) {
+            sql = "UPDATE produits SET code_barre = ?, nom = ?, categorie = ?, prix_achat_actuel = ?, " +
+                  "prix_vente_defaut = ?, quantite_stock = ?, unite = ?, seuil_alerte = ? WHERE id = ?";
+        } else {
+            sql = "UPDATE produits SET code_barre = ?, nom = ?, categorie = ?, prix_achat_actuel = ?, " +
+                  "prix_vente_defaut = ?, quantite_stock = ?, seuil_alerte = ? WHERE id = ?";
+        }
         
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
-            stmt.setString(1, produit.getCodeBarre());
-            stmt.setString(2, produit.getNom());
-            stmt.setString(3, produit.getCategorie() != null ? produit.getCategorie() : "");
-            stmt.setBigDecimal(4, produit.getPrixAchatActuel());
-            stmt.setBigDecimal(5, produit.getPrixVenteDefaut());
-            stmt.setInt(6, produit.getQuantiteStock());
-            stmt.setInt(7, produit.getSeuilAlerte());
-            stmt.setInt(8, produit.getId());
+            int paramIndex = 1;
+            stmt.setString(paramIndex++, produit.getCodeBarre());
+            stmt.setString(paramIndex++, produit.getNom());
+            stmt.setString(paramIndex++, produit.getCategorie() != null ? produit.getCategorie() : "");
+            stmt.setBigDecimal(paramIndex++, produit.getPrixAchatActuel());
+            stmt.setBigDecimal(paramIndex++, produit.getPrixVenteDefaut());
+            stmt.setInt(paramIndex++, produit.getQuantiteStock());
+            if (hasUnite) {
+                stmt.setString(paramIndex++, produit.getUnite());
+            }
+            stmt.setInt(paramIndex++, produit.getSeuilAlerte());
+            stmt.setInt(paramIndex++, produit.getId());
             
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -405,6 +429,13 @@ public class ProduitDAO {
             // Colonne categorie peut ne pas exister dans certaines bases
         }
         
+        String unite = null;
+        try {
+            unite = rs.getString("unite");
+        } catch (SQLException e) {
+            // Colonne unite peut ne pas exister dans certaines bases
+        }
+        
         return new Produit(
             rs.getInt("id"),
             rs.getString("code_barre"),
@@ -413,8 +444,33 @@ public class ProduitDAO {
             rs.getBigDecimal("prix_achat_actuel"),
             rs.getBigDecimal("prix_vente_defaut"),
             rs.getInt("quantite_stock"),
+            unite,
             rs.getInt("seuil_alerte")
         );
+    }
+    
+    /**
+     * Vérifie si une colonne existe dans la table produits
+     */
+    private boolean columnExists(String columnName) {
+        String sql = "SELECT COUNT(*) as count FROM INFORMATION_SCHEMA.COLUMNS " +
+                     "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'produits' AND COLUMN_NAME = ?";
+        
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, columnName);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt("count") > 0;
+            }
+        } catch (SQLException e) {
+            // En cas d'erreur, supposer que la colonne n'existe pas
+            return false;
+        }
+        
+        return false;
     }
 }
 
