@@ -10,11 +10,20 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane xmlns="http://javafx.com/javafx/23.0.1"
+<AnchorPane styleClass="root" stylesheets="@/styles/global.css" xmlns="http://javafx.com/javafx/23.0.1"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controller.AdminDashboardController">
+   <style>
+      -fx-background-image: url('/background/backgroundlogin.jpg');
+      -fx-background-size: cover;
+      -fx-background-position: center center;
+      -fx-background-repeat: no-repeat;
+   </style>
 
    <children>
+      <!-- Semi-transparent overlay for better readability and clarity -->
+      <AnchorPane style="-fx-background-color: rgba(255, 255, 255, 0.08);" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" mouseTransparent="true" />
+      
       <VBox spacing="20"
             AnchorPane.topAnchor="0"
             AnchorPane.bottomAnchor="0"
@@ -22,8 +31,8 @@
             AnchorPane.rightAnchor="0">
 
          <!-- HEADER -->
-         <HBox alignment="CENTER_LEFT" spacing="10"
-               style="-fx-background-color: linear-gradient(to right, #2E7D32, #4CAF50); -fx-padding: 15;">
+         <HBox alignment="CENTER_LEFT" spacing="10" styleClass="header-bar"
+               style="-fx-background-color: linear-gradient(to right, rgba(46, 125, 50, 0.95), rgba(76, 175, 80, 0.95)); -fx-padding: 15;">
             <children>
                <Label fx:id="welcomeLabel"
                       text="Bienvenue, Admin"
@@ -31,11 +40,9 @@
                       style="-fx-font-weight: bold; -fx-font-size: 20px;" />
                <Region HBox.hgrow="ALWAYS" />
                <Button fx:id="deconnexionButton"
-                       text="Déconnexion"
+                       text="🚪 Déconnexion"
                        onAction="#handleDeconnexion"
-                       style="-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold;
-                                   -fx-font-size: 16px; -fx-background-radius: 8; -fx-pref-height: 40;
-                                   -fx-pref-width: 150; -fx-cursor: hand;" />
+                       styleClass="header-action-button" />
             </children>
             <padding>
                <Insets top="10" bottom="10" left="20" right="20"/>
@@ -45,88 +52,115 @@
          <Separator/>
 
          <!-- DASHBOARD CONTENT -->
-         <VBox alignment="CENTER" spacing="30" VBox.vgrow="ALWAYS">
+         <VBox alignment="CENTER" spacing="30" VBox.vgrow="ALWAYS" style="-fx-padding: 30;">
             <children>
 
-               <Label text="Dashboard Administrateur"
-                      style="-fx-font-weight: bold; -fx-font-size: 24px; -fx-text-fill: #2E7D32;"
+               <Label text="🏢 Dashboard Administrateur"
+                      style="-fx-font-weight: bold; -fx-font-size: 28px; -fx-text-fill: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 10, 0, 0, 3);"
                       textAlignment="CENTER">
                   <font>
-                     <Font name="System Bold" size="24"/>
+                     <Font name="System Bold" size="28"/>
                   </font>
                </Label>
 
-               <HBox alignment="CENTER" spacing="30">
+               <VBox alignment="CENTER" spacing="20" style="-fx-background-color: rgba(255, 255, 255, 0.92); -fx-background-radius: 15; -fx-padding: 40; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 20, 0, 0, 10);">
+                  <children>
+                     <Label text="📊 Modules de Gestion" style="-fx-font-weight: bold; -fx-font-size: 20px; -fx-text-fill: #2E7D32;" />
+                     
+                     <HBox alignment="CENTER" spacing="20">
+                        <children>
+                           <VBox alignment="CENTER_LEFT" spacing="6" styleClass="dashboard-stat-card">
+                              <children>
+                                 <Label text="Produits en stock" styleClass="dashboard-stat-title" />
+                                 <Label fx:id="totalProduitsStatLabel" text="0" styleClass="dashboard-stat-value" />
+                                 <Label text="Articles disponibles" styleClass="dashboard-stat-subtitle" />
+                              </children>
+                           </VBox>
+                           
+                           <VBox alignment="CENTER_LEFT" spacing="6" styleClass="dashboard-stat-card">
+                              <children>
+                                 <Label text="Ruptures" styleClass="dashboard-stat-title" />
+                                 <Label fx:id="rupturesStatLabel" text="0" styleClass="dashboard-stat-value-warning" />
+                                 <Label text="Produits à réapprovisionner" styleClass="dashboard-stat-subtitle" />
+                              </children>
+                           </VBox>
+                           
+                           <VBox alignment="CENTER_LEFT" spacing="6" styleClass="dashboard-stat-card">
+                              <children>
+                                 <Label text="Ventes aujourd'hui" styleClass="dashboard-stat-title" />
+                                 <Label fx:id="ventesJourStatLabel" text="0" styleClass="dashboard-stat-value-accent" />
+                                 <Label text="Chiffre d'affaires du jour" styleClass="dashboard-stat-subtitle" />
+                              </children>
+                           </VBox>
+                        </children>
+                     </HBox>
+                     
+                     <HBox alignment="CENTER" spacing="30">
                   <children>
 
-                     <!-- GESTION STOCK -->
-                     <VBox alignment="CENTER" spacing="15">
-                        <children>
-                           <Button fx:id="gestionStockButton"
-                                   text="Gestion de Stock"
-                                   onAction="#handleGestionStock"
-                                   prefHeight="80" prefWidth="200"
-                                   style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;
-                                                   -fx-font-size: 16px; -fx-background-radius: 8; -fx-cursor: hand;" />
-                           <Label text="Gérer les produits et le stock" textAlignment="CENTER"/>
-                        </children>
-                     </VBox>
+                        <!-- GESTION STOCK -->
+                        <VBox alignment="CENTER" spacing="15">
+                           <children>
+                              <Button fx:id="gestionStockButton"
+                                      text="📦 Gestion de Stock"
+                                      onAction="#handleGestionStock"
+                                      prefHeight="80" prefWidth="200"
+                                      styleClass="dashboard-button dashboard-button-primary" />
+                              <Label text="Gérer les produits et le stock" textAlignment="CENTER" style="-fx-font-weight: bold;"/>
+                           </children>
+                        </VBox>
 
-                     <!-- GESTION UTILISATEURS -->
-                     <VBox alignment="CENTER" spacing="15">
-                        <children>
-                           <Button fx:id="gestionUtilisateursButton"
-                                   text="Gestion Utilisateurs"
-                                   onAction="#handleGestionUtilisateurs"
-                                   prefHeight="80" prefWidth="200"
-                                   style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;
-                                                   -fx-font-size: 16px; -fx-background-radius: 8; -fx-cursor: hand;" />
-                           <Label text="Gérer les utilisateurs" textAlignment="CENTER"/>
-                        </children>
-                     </VBox>
+                        <!-- GESTION UTILISATEURS -->
+                        <VBox alignment="CENTER" spacing="15">
+                           <children>
+                              <Button fx:id="gestionUtilisateursButton"
+                                      text="👥 Gestion Utilisateurs"
+                                      onAction="#handleGestionUtilisateurs"
+                                      prefHeight="80" prefWidth="200"
+                                      styleClass="dashboard-button dashboard-button-accent" />
+                              <Label text="Gérer les utilisateurs" textAlignment="CENTER" style="-fx-font-weight: bold;"/>
+                           </children>
+                        </VBox>
 
-                     <!-- GESTION DES VENTES -->
-                     <VBox alignment="CENTER" spacing="15">
-                        <children>
-                           <Button fx:id="gestionVentesButton"
-                                   text="Gestion des Ventes"
-                                   onAction="#handleGestionVentes"
-                                   prefHeight="80" prefWidth="200"
-                                   style="-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold;
-                                                   -fx-font-size: 16px; -fx-background-radius: 8; -fx-cursor: hand;" />
-                           <Label text="Consulter les ventes" textAlignment="CENTER"/>
-                        </children>
-                     </VBox>
+                        <!-- GESTION DES VENTES -->
+                        <VBox alignment="CENTER" spacing="15">
+                           <children>
+                              <Button fx:id="gestionVentesButton"
+                                      text="💰 Gestion des Ventes"
+                                      onAction="#handleGestionVentes"
+                                      prefHeight="80" prefWidth="200"
+                                      styleClass="dashboard-button dashboard-button-warning" />
+                              <Label text="Consulter les ventes" textAlignment="CENTER" style="-fx-font-weight: bold;"/>
+                           </children>
+                        </VBox>
 
-                     <!-- GESTION TABAC -->
-                     <VBox alignment="CENTER" spacing="15">
-                        <children>
-                           <Button fx:id="gestionTabacButton"
-                                   text="Caisse Tabac"
-                                   onAction="#handleGestionTabac"
-                                   prefHeight="80" prefWidth="200"
-                                   style="-fx-background-color: #9C27B0; -fx-text-fill: white; -fx-font-weight: bold;
-                                                   -fx-font-size: 16px; -fx-background-radius: 8; -fx-cursor: hand;" />
-                           <Label text="Ventes Tabac/Puff/Terrea" textAlignment="CENTER"/>
-                        </children>
-                     </VBox>
+                        <!-- GESTION TABAC -->
+                        <VBox alignment="CENTER" spacing="15">
+                           <children>
+                              <Button fx:id="gestionTabacButton"
+                                      text="🚬 Caisse Tabac"
+                                      onAction="#handleGestionTabac"
+                                      prefHeight="80" prefWidth="200"
+                                      styleClass="dashboard-button dashboard-button-purple" />
+                              <Label text="Ventes Tabac/Puff/Terrea" textAlignment="CENTER" style="-fx-font-weight: bold;"/>
+                           </children>
+                        </VBox>
 
-                     <!-- VISUALISATION PRODUITS -->
-                     <VBox alignment="CENTER" spacing="15">
-                        <children>
-                           <Button fx:id="visualisationProduitsButton"
-                                   text="Visualisation Produits"
-                                   onAction="#handleVisualisationProduits"
-                                   prefHeight="80" prefWidth="200"
-                                   style="-fx-background-color: #00BCD4; -fx-text-fill: white; -fx-font-weight: bold;
-                                                   -fx-font-size: 16px; -fx-background-radius: 8; -fx-cursor: hand;" />
-                           <Label text="Voir tous les produits" textAlignment="CENTER"/>
-                        </children>
-                     </VBox>
-
-
+                        <!-- VISUALISATION PRODUITS -->
+                        <VBox alignment="CENTER" spacing="15">
+                           <children>
+                              <Button fx:id="visualisationProduitsButton"
+                                      text="👁️ Visualisation Produits"
+                                      onAction="#handleVisualisationProduits"
+                                      prefHeight="80" prefWidth="200"
+                                      styleClass="dashboard-button dashboard-button-cyan" />
+                              <Label text="Voir tous les produits" textAlignment="CENTER" style="-fx-font-weight: bold;"/>
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
                   </children>
-               </HBox>
+               </VBox>
             </children>
 
             <padding>

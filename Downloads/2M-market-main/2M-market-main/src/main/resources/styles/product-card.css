@@ -198,6 +198,12 @@
     -fx-scale-y: 1.05;
 }
 
+.product-card-footer {
+    -fx-padding: 12 0 0 0;
+    -fx-spacing: 12px;
+    -fx-alignment: center-left;
+}
+
 .product-add-btn:pressed {
     -fx-scale-x: 0.95;
     -fx-scale-y: 0.95;

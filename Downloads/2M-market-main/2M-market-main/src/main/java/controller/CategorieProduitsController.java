@@ -163,29 +163,30 @@ public class CategorieProduitsController {
         // ============================================
         // CONTENT: Main Product Information
         // ============================================
-        VBox contentBox = new VBox(12);
+        VBox contentBox = new VBox(10);
         contentBox.getStyleClass().add("product-card-content");
         contentBox.setAlignment(Pos.TOP_LEFT);
-        VBox.setVgrow(contentBox, Priority.ALWAYS);
-        contentBox.setPadding(new Insets(8, 0, 8, 0));
+        contentBox.setPadding(new Insets(8, 0, 0, 0));
 
         // PRODUCT NAME - BIG & CLEAR (Primary Focus)
         Label nomLabel = new Label(produit.getNom());
         nomLabel.getStyleClass().add("product-name");
         nomLabel.setWrapText(true);
         nomLabel.setMaxWidth(Double.MAX_VALUE);
+        nomLabel.setAlignment(Pos.TOP_LEFT);
 
         // PRICE - LARGE & PROMINENT
         HBox priceContainer = new HBox();
         priceContainer.getStyleClass().add("product-price-container");
         priceContainer.setAlignment(Pos.CENTER_LEFT);
+        priceContainer.setPadding(new Insets(5, 0, 5, 0));
         
-        Label prixLabel = new Label(String.format("%.2f €", produit.getPrixVenteDefaut()));
+        Label prixLabel = new Label(String.format("%.2f DT", produit.getPrixVenteDefaut()));
         prixLabel.getStyleClass().add("product-price");
         priceContainer.getChildren().add(prixLabel);
 
         // DETAILS CONTAINER - Medium size, clear info
-        VBox detailsContainer = new VBox(6);
+        VBox detailsContainer = new VBox(5);
         detailsContainer.getStyleClass().add("product-details-container");
         detailsContainer.setAlignment(Pos.TOP_LEFT);
 
@@ -193,64 +194,62 @@ public class CategorieProduitsController {
         if (produit.getCodeBarre() != null && !produit.getCodeBarre().isEmpty()) {
             Label codeLabel = new Label("📋 " + produit.getCodeBarre());
             codeLabel.getStyleClass().add("product-code");
+            codeLabel.setAlignment(Pos.CENTER_LEFT);
             detailsContainer.getChildren().add(codeLabel);
         }
 
         // Unité
         if (produit.getUnite() != null && !produit.getUnite().isEmpty()) {
-            Label uniteLabel = new Label("📦 Unité: " + produit.getUnite());
+            Label uniteLabel = new Label("📦 " + produit.getUnite());
             uniteLabel.getStyleClass().add("product-unite");
+            uniteLabel.setAlignment(Pos.CENTER_LEFT);
             detailsContainer.getChildren().add(uniteLabel);
         }
 
-        // Prix d'achat (info)
-        Label prixAchatLabel = new Label("💰 Achat: " + String.format("%.2f €", produit.getPrixAchatActuel()));
-        prixAchatLabel.getStyleClass().add("product-purchase-price");
-        detailsContainer.getChildren().add(prixAchatLabel);
-
         contentBox.getChildren().addAll(nomLabel, priceContainer, detailsContainer);
+
+        // Spacer to push footer to bottom
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
 
         // ============================================
         // FOOTER: Stock (Small) & Action Button
         // ============================================
-        VBox footerBox = new VBox(12);
+        VBox footerBox = new VBox(10);
         footerBox.getStyleClass().add("product-card-footer");
-        footerBox.setAlignment(Pos.CENTER);
-        footerBox.setPadding(new Insets(12, 0, 0, 0));
+        footerBox.setAlignment(Pos.BOTTOM_CENTER);
+        footerBox.setPadding(new Insets(10, 0, 0, 0));
 
         // Stock Container - Small but visible
-        HBox stockContainer = new HBox(8);
+        HBox stockContainer = new HBox(6);
         stockContainer.getStyleClass().add("product-stock-container");
-        stockContainer.setAlignment(Pos.CENTER_LEFT);
-
-        // Stock label (small)
-        Label stockLabelText = new Label("Stock:");
-        stockLabelText.getStyleClass().add("stock-label");
+        stockContainer.setAlignment(Pos.CENTER);
+        stockContainer.setStyle("-fx-padding: 5 0;");
 
         // Stock value badge
-        String stockText = String.valueOf(produit.getQuantiteStock());
+        String stockText = "📊 Stock: " + produit.getQuantiteStock();
         Label stockLabel = new Label(stockText);
         stockLabel.getStyleClass().add("product-stock");
-        stockLabel.getStyleClass().add("stock-value");
         
         // Stock color class based on quantity
-        if (produit.isStockFaible() || produit.getQuantiteStock() <= produit.getSeuilAlerte()) {
+        if (produit.getQuantiteStock() == 0) {
+            stockLabel.getStyleClass().add("stock-critical");
+        } else if (produit.isStockFaible() || produit.getQuantiteStock() <= produit.getSeuilAlerte()) {
             stockLabel.getStyleClass().add("stock-low");
-            if (produit.getQuantiteStock() == 0) {
-                stockLabel.getStyleClass().add("stock-critical");
-            }
         } else if (produit.getQuantiteStock() > 50) {
             stockLabel.getStyleClass().add("stock-high");
         } else {
             stockLabel.getStyleClass().add("stock-medium");
         }
 
-        stockContainer.getChildren().addAll(stockLabelText, stockLabel);
+        stockContainer.getChildren().add(stockLabel);
 
-        // Action Button - Prominent
-        Button ajouterButton = new Button("➕ Ajouter au Panier");
-        ajouterButton.getStyleClass().add("product-add-btn");
+        // Action Button - Prominent and at bottom
+        Button ajouterButton = new Button("✅ Ajouter");
+        ajouterButton.getStyleClass().addAll("btn", "btn-primary");
         ajouterButton.setMaxWidth(Double.MAX_VALUE);
+        ajouterButton.setMinHeight(40);
+        ajouterButton.setAlignment(Pos.CENTER);
         ajouterButton.setOnAction(e -> ajouterAuPanier(produit));
 
         footerBox.getChildren().addAll(stockContainer, ajouterButton);
@@ -258,10 +257,19 @@ public class CategorieProduitsController {
         // ============================================
         // ASSEMBLE CARD
         // ============================================
-        card.getChildren().addAll(headerBox, contentBox, footerBox);
+        card.getChildren().addAll(headerBox, contentBox, spacer, footerBox);
 
         // Effets hover sur la carte
         configurerEffetsHoverCarte(card);
+
+        // ============================================
+        // DOUBLE-CLICK to add to cart
+        // ============================================
+        card.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 2) {
+                ajouterAuPanier(produit);
+            }
+        });
 
         return card;
     }

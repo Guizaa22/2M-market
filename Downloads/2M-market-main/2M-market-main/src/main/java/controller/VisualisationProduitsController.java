@@ -17,6 +17,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import model.Produit;
@@ -108,154 +110,177 @@ public class VisualisationProduitsController {
     }
     
     /**
-     * Crée une carte produit avec effets 3D et hover
+     * Crée une carte produit avec effets 3D et hover - IMPROVED LAYOUT
      */
     private VBox creerCarteProduit(Produit produit) {
-        VBox card = new VBox(10);
-        card.setPrefSize(280, 320);
-        card.setPadding(new Insets(20));
-        card.setAlignment(Pos.TOP_CENTER);
+        VBox card = new VBox(12);
+        card.getStyleClass().add("product-card");
+        card.setAlignment(Pos.TOP_LEFT);
+        card.setPadding(new Insets(18));
+
+        // ============================================
+        // HEADER: Category Badge (Small, Top Right)
+        // ============================================
+        HBox headerBox = new HBox();
+        headerBox.setAlignment(Pos.CENTER_RIGHT);
+        headerBox.getStyleClass().add("product-card-header");
+        headerBox.setPadding(new Insets(0, 0, 8, 0));
         
-        // Style de base avec effet 3D
-        DropShadow shadow = new DropShadow();
-        shadow.setColor(Color.rgb(0, 0, 0, 0.3));
-        shadow.setRadius(15);
-        shadow.setOffsetX(0);
-        shadow.setOffsetY(5);
-        card.setEffect(shadow);
-        
-        card.setStyle(
-            "-fx-background-color: linear-gradient(to bottom, #ffffff, #f5f5f5); " +
-            "-fx-background-radius: 15; " +
-            "-fx-border-color: #e0e0e0; " +
-            "-fx-border-width: 1; " +
-            "-fx-border-radius: 15; " +
-            "-fx-cursor: hand;"
-        );
-        
-        // Nom du produit
+        Label catLabel = new Label(produit.getCategorie() != null && !produit.getCategorie().isEmpty() 
+            ? produit.getCategorie() : "Non catégorisé");
+        catLabel.getStyleClass().add("product-category");
+        headerBox.getChildren().add(catLabel);
+
+        // ============================================
+        // CONTENT: Main Product Information
+        // ============================================
+        VBox contentBox = new VBox(10);
+        contentBox.getStyleClass().add("product-card-content");
+        contentBox.setAlignment(Pos.TOP_LEFT);
+        contentBox.setPadding(new Insets(8, 0, 0, 0));
+
+        // PRODUCT NAME - BIG & CLEAR (Primary Focus)
         Label nomLabel = new Label(produit.getNom());
-        nomLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2E7D32; -fx-wrap-text: true;");
-        nomLabel.setMaxWidth(240);
+        nomLabel.getStyleClass().add("product-name");
+        nomLabel.setWrapText(true);
+        nomLabel.setMaxWidth(Double.MAX_VALUE);
+        nomLabel.setAlignment(Pos.TOP_LEFT);
+
+        // PRICE BOX - LARGE & PROMINENT with both prices
+        VBox priceBox = new VBox(5);
+        priceBox.setAlignment(Pos.CENTER_LEFT);
+        priceBox.setPadding(new Insets(8, 0, 8, 0));
+        priceBox.setStyle("-fx-background-color: rgba(76, 175, 80, 0.1); -fx-background-radius: 8; -fx-padding: 10;");
         
-        // Code-barres
-        Label codeBarreLabel = new Label("📋 " + produit.getCodeBarre());
-        codeBarreLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #666;");
+        HBox prixVenteBox = new HBox(8);
+        prixVenteBox.setAlignment(Pos.CENTER_LEFT);
+        Label prixVenteIcon = new Label("💰");
+        prixVenteIcon.setStyle("-fx-font-size: 18px;");
+        Label prixVenteLabel = new Label(String.format("Prix Vente: %.2f DT", produit.getPrixVenteDefaut()));
+        prixVenteLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2E7D32;");
+        prixVenteBox.getChildren().addAll(prixVenteIcon, prixVenteLabel);
         
-        // Catégorie
-        Label categorieLabel = new Label("📂 " + (produit.getCategorie() != null && !produit.getCategorie().isEmpty() ? produit.getCategorie() : "Non catégorisé"));
-        categorieLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #999;");
+        HBox prixAchatBox = new HBox(8);
+        prixAchatBox.setAlignment(Pos.CENTER_LEFT);
+        Label prixAchatIcon = new Label("🏷️");
+        prixAchatIcon.setStyle("-fx-font-size: 14px;");
+        Label prixAchatLabel = new Label(String.format("Prix Achat: %.2f DT", produit.getPrixAchatActuel()));
+        prixAchatLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #666;");
+        prixAchatBox.getChildren().addAll(prixAchatIcon, prixAchatLabel);
         
+        priceBox.getChildren().addAll(prixVenteBox, prixAchatBox);
+
+        // DETAILS CONTAINER - Clear and comprehensive info
+        VBox detailsContainer = new VBox(8);
+        detailsContainer.setAlignment(Pos.TOP_LEFT);
+        detailsContainer.setPadding(new Insets(8, 0, 8, 0));
+
+        // Code barre
+        if (produit.getCodeBarre() != null && !produit.getCodeBarre().isEmpty()) {
+            HBox codeBox = new HBox(8);
+            codeBox.setAlignment(Pos.CENTER_LEFT);
+            Label codeIcon = new Label("📋");
+            codeIcon.setStyle("-fx-font-size: 16px;");
+            Label codeLabel = new Label("Code: " + produit.getCodeBarre());
+            codeLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #333;");
+            codeBox.getChildren().addAll(codeIcon, codeLabel);
+            detailsContainer.getChildren().add(codeBox);
+        }
+
         // Unité
-        Label uniteLabel = new Label("⚖️ Unité: " + produit.getUnite());
-        uniteLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #999;");
-        
-        // Prix
-        HBox prixBox = new HBox(10);
-        prixBox.setAlignment(Pos.CENTER);
-        
-        Label prixAchatLabel = new Label("Achat: €" + String.format("%.2f", produit.getPrixAchatActuel()));
-        prixAchatLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #757575;");
-        
-        Label prixVenteLabel = new Label("Vente: €" + String.format("%.2f", produit.getPrixVenteDefaut()));
-        prixVenteLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #4CAF50;");
-        
-        prixBox.getChildren().addAll(prixAchatLabel, prixVenteLabel);
-        
-        // Stock avec couleur conditionnelle
-        int stock = produit.getQuantiteStock();
-        String stockColor = stock > produit.getSeuilAlerte() ? "#4CAF50" : "#f44336";
-        Label stockLabel = new Label("📦 Stock: " + stock + " " + produit.getUnite());
-        stockLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + stockColor + ";");
+        if (produit.getUnite() != null && !produit.getUnite().isEmpty()) {
+            HBox uniteBox = new HBox(8);
+            uniteBox.setAlignment(Pos.CENTER_LEFT);
+            Label uniteIcon = new Label("📦");
+            uniteIcon.setStyle("-fx-font-size: 16px;");
+            Label uniteLabel = new Label("Unité: " + produit.getUnite());
+            uniteLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #555;");
+            uniteBox.getChildren().addAll(uniteIcon, uniteLabel);
+            detailsContainer.getChildren().add(uniteBox);
+        }
         
         // Seuil d'alerte
-        Label seuilLabel = new Label("⚠️ Seuil: " + produit.getSeuilAlerte());
-        seuilLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #FF9800;");
+        HBox seuilBox = new HBox(8);
+        seuilBox.setAlignment(Pos.CENTER_LEFT);
+        Label seuilIcon = new Label("⚠️");
+        seuilIcon.setStyle("-fx-font-size: 16px;");
+        Label seuilLabel = new Label("Seuil alerte: " + produit.getSeuilAlerte());
+        seuilLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #FF9800; -fx-font-weight: bold;");
+        seuilBox.getChildren().addAll(seuilIcon, seuilLabel);
+        detailsContainer.getChildren().add(seuilBox);
+
+        contentBox.getChildren().addAll(nomLabel, priceBox, detailsContainer);
+
+        VBox spacer = new VBox();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+
+        HBox footerBox = new HBox(12);
+        footerBox.getStyleClass().add("product-card-footer");
+        footerBox.setAlignment(Pos.CENTER_LEFT);
+        footerBox.setPadding(new Insets(8, 0, 0, 0));
+
+        // Stock Container - Large and prominent with clear status
+        VBox stockContainerBox = new VBox(5);
+        stockContainerBox.setAlignment(Pos.CENTER);
+        stockContainerBox.setPadding(new Insets(10));
+        stockContainerBox.setStyle("-fx-background-radius: 8;");
         
-        // Bouton d'action
-        Button actionButton = new Button("➕ Ajouter au Stock");
-        actionButton.setPrefWidth(240);
-        actionButton.setPrefHeight(35);
-        actionButton.setStyle(
-            "-fx-background-color: linear-gradient(to bottom, #4CAF50, #2E7D32); " +
-            "-fx-text-fill: white; " +
-            "-fx-font-weight: bold; " +
-            "-fx-font-size: 13px; " +
-            "-fx-background-radius: 8; " +
-            "-fx-cursor: hand; " +
-            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);"
-        );
+        // Determine stock color and message
+        String stockColor;
+        String stockIcon;
+        String stockMessage;
         
-        // Effet hover sur le bouton
-        actionButton.setOnMouseEntered(e -> {
-            actionButton.setStyle(
-                "-fx-background-color: linear-gradient(to bottom, #66BB6A, #4CAF50); " +
-                "-fx-text-fill: white; " +
-                "-fx-font-weight: bold; " +
-                "-fx-font-size: 13px; " +
-                "-fx-background-radius: 8; " +
-                "-fx-cursor: hand; " +
-                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 4); " +
-                "-fx-scale-x: 1.05; " +
-                "-fx-scale-y: 1.05;"
-            );
-        });
+        if (produit.getQuantiteStock() == 0) {
+            stockColor = "-fx-background-color: rgba(244, 67, 54, 0.15);";
+            stockIcon = "❌";
+            stockMessage = "RUPTURE";
+        } else if (produit.isStockFaible() || produit.getQuantiteStock() <= produit.getSeuilAlerte()) {
+            stockColor = "-fx-background-color: rgba(255, 152, 0, 0.15);";
+            stockIcon = "⚠️";
+            stockMessage = "FAIBLE";
+        } else if (produit.getQuantiteStock() > 50) {
+            stockColor = "-fx-background-color: rgba(76, 175, 80, 0.15);";
+            stockIcon = "✅";
+            stockMessage = "BON";
+        } else {
+            stockColor = "-fx-background-color: rgba(33, 150, 243, 0.15);";
+            stockIcon = "📦";
+            stockMessage = "MOYEN";
+        }
         
-        actionButton.setOnMouseExited(e -> {
-            actionButton.setStyle(
-                "-fx-background-color: linear-gradient(to bottom, #4CAF50, #2E7D32); " +
-                "-fx-text-fill: white; " +
-                "-fx-font-weight: bold; " +
-                "-fx-font-size: 13px; " +
-                "-fx-background-radius: 8; " +
-                "-fx-cursor: hand; " +
-                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2); " +
-                "-fx-scale-x: 1.0; " +
-                "-fx-scale-y: 1.0;"
-            );
-        });
+        stockContainerBox.setStyle(stockColor + " -fx-background-radius: 8;");
         
+        HBox stockQtyBox = new HBox(8);
+        stockQtyBox.setAlignment(Pos.CENTER_LEFT);
+        Label stockIconLabel = new Label(stockIcon);
+        stockIconLabel.setStyle("-fx-font-size: 22px;");
+        Label stockQtyLabel = new Label("Stock: " + produit.getQuantiteStock());
+        stockQtyLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #333;");
+        stockQtyBox.getChildren().addAll(stockIconLabel, stockQtyLabel);
+        Label stockStatusLabel = new Label(stockMessage);
+        stockStatusLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #666;");
+        stockContainerBox.getChildren().addAll(stockQtyBox, stockStatusLabel);
+
+        Button actionButton = new Button("➕ Ajouter");
+        actionButton.getStyleClass().addAll("btn", "btn-primary");
+        actionButton.setMinHeight(45);
+        actionButton.setAlignment(Pos.CENTER);
+        actionButton.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
         actionButton.setOnAction(e -> ouvrirAjoutStock(produit));
-        
-        // Assembler la carte
-        card.getChildren().addAll(nomLabel, codeBarreLabel, categorieLabel, uniteLabel, prixBox, stockLabel, seuilLabel, actionButton);
-        
-        // Effets hover sur la carte entière (3D)
-        card.setOnMouseEntered(e -> {
-            DropShadow hoverShadow = new DropShadow();
-            hoverShadow.setColor(Color.rgb(76, 175, 80, 0.5));
-            hoverShadow.setRadius(20);
-            hoverShadow.setOffsetX(0);
-            hoverShadow.setOffsetY(8);
-            card.setEffect(hoverShadow);
-            card.setStyle(
-                "-fx-background-color: linear-gradient(to bottom, #f9f9f9, #f0f0f0); " +
-                "-fx-background-radius: 15; " +
-                "-fx-border-color: #4CAF50; " +
-                "-fx-border-width: 2; " +
-                "-fx-border-radius: 15; " +
-                "-fx-cursor: hand; " +
-                "-fx-scale-x: 1.02; " +
-                "-fx-scale-y: 1.02; " +
-                "-fx-translate-y: -5;"
-            );
-        });
-        
-        card.setOnMouseExited(e -> {
-            card.setEffect(shadow);
-            card.setStyle(
-                "-fx-background-color: linear-gradient(to bottom, #ffffff, #f5f5f5); " +
-                "-fx-background-radius: 15; " +
-                "-fx-border-color: #e0e0e0; " +
-                "-fx-border-width: 1; " +
-                "-fx-border-radius: 15; " +
-                "-fx-cursor: hand; " +
-                "-fx-scale-x: 1.0; " +
-                "-fx-scale-y: 1.0; " +
-                "-fx-translate-y: 0;"
-            );
-        });
-        
+        HBox.setHgrow(actionButton, Priority.ALWAYS);
+
+        footerBox.getChildren().addAll(stockContainerBox, actionButton);
+
+        // ============================================
+        // ASSEMBLE CARD
+        // ============================================
+        card.getChildren().addAll(
+            headerBox,
+            contentBox,
+            spacer,
+            footerBox
+        );
+
         return card;
     }
     

@@ -5,15 +5,20 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane styleClass="root" stylesheets="@/styles/global.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.AjoutStockEmployeController">
-   <style>
-      -fx-background-image: url('/background/backgroundstock.jpg');
-      -fx-background-size: cover;
-      -fx-background-position: center;
-      -fx-background-repeat: no-repeat;
-   </style>
+<StackPane fx:id="rootPane" styleClass="root" stylesheets="@/styles/global.css, @/styles/product-card.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.AjoutStockEmployeController">
    <children>
-      <VBox spacing="0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <AnchorPane>
+         <style>
+            -fx-background-image: url('/background/backgroundstock.jpg');
+            -fx-background-size: cover;
+            -fx-background-position: center center;
+            -fx-background-repeat: no-repeat;
+         </style>
+         <children>
+            <!-- Semi-transparent overlay for better readability and clarity -->
+            <AnchorPane style="-fx-background-color: rgba(255, 255, 255, 0.08);" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" mouseTransparent="true" />
+            
+            <VBox spacing="0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
             <!-- ========================================
                  HEADER - Barre supérieure
@@ -44,7 +49,7 @@
                   <!-- ========================================
                        PANEL GAUCHE - Recherche & Ajout
                        ======================================== -->
-                  <VBox spacing="20" styleClass="card" HBox.hgrow="SOMETIMES" minWidth="400" maxWidth="500">
+                  <VBox spacing="20" styleClass="card" HBox.hgrow="NEVER" prefWidth="450" minWidth="400" maxWidth="500" style="-fx-background-color: rgba(255, 255, 255, 0.95);">
                      <padding>
                         <Insets bottom="25" left="25" right="25" top="25" />
                      </padding>
@@ -55,11 +60,11 @@
                            </font>
                         </Label>
 
-                        <!-- Champ de recherche -->
+                        <!-- Champ de recherche LIVE -->
                         <VBox spacing="8">
-                           <Label style="-fx-font-weight: bold; -fx-font-size: 14px;" text="Code-barres ou Nom:" />
-                           <TextField fx:id="rechercheField" onAction="#handleRecherche" promptText="Entrez le code-barres ou le nom du produit..." styleClass="text-field" />
-                           <Button fx:id="rechercherButton" onAction="#handleRecherche" styleClass="btn, btn-primary" text="🔍 Rechercher" maxWidth="Infinity" />
+                           <Label style="-fx-font-weight: bold; -fx-font-size: 14px;" text="🔎 Recherche en temps réel:" />
+                           <TextField fx:id="rechercheField" onAction="#handleRecherche" promptText="✨ Tapez pour filtrer instantanément..." styleClass="text-field" />
+                           <Label style="-fx-font-size: 11px; -fx-text-fill: #718096; -fx-font-style: italic;" text="💡 Les résultats s'affichent pendant que vous tapez" />
                         </VBox>
 
                         <Separator />
@@ -116,7 +121,7 @@
                   <!-- ========================================
                        PANEL DROIT - Liste des Produits
                        ======================================== -->
-                  <VBox spacing="15" styleClass="card" HBox.hgrow="ALWAYS">
+                  <VBox spacing="15" styleClass="card" HBox.hgrow="ALWAYS" style="-fx-background-color: rgba(255, 255, 255, 0.95);">
                      <padding>
                         <Insets bottom="25" left="25" right="25" top="25" />
                      </padding>
@@ -128,20 +133,25 @@
                               </font>
                            </Label>
                            <Region HBox.hgrow="ALWAYS" />
-                           <TextField fx:id="filtreField" onKeyReleased="#handleFiltre" promptText="Filtrer les produits..." styleClass="text-field" prefWidth="250" />
+                           <VBox spacing="2">
+                              <TextField fx:id="filtreField" onKeyReleased="#handleFiltre" promptText="✨ Filtrer en direct..." styleClass="text-field" prefWidth="280" />
+                              <Label style="-fx-font-size: 10px; -fx-text-fill: #718096; -fx-font-style: italic;" text="Filtre instantané pendant que vous tapez" />
+                           </VBox>
                         </HBox>
 
-                        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background: transparent;">
+                        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background: transparent; -fx-background-color: transparent;">
                            <content>
-                              <FlowPane fx:id="produitsContainer" hgap="15" vgap="15" />
+                              <FlowPane fx:id="produitsContainer" hgap="20" vgap="20" style="-fx-padding: 10; -fx-background-color: transparent;" />
                            </content>
                         </ScrollPane>
                      </children>
                   </VBox>
                </children>
             </HBox>
+            </children>
+         </VBox>
          </children>
-      </VBox>
+      </AnchorPane>
    </children>
-</AnchorPane>
+</StackPane>
 

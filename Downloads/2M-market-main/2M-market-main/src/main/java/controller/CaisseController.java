@@ -180,17 +180,45 @@ public class CaisseController {
 
         infoBox.getChildren().addAll(nomLabel, codeLabel);
 
-        // Quantité
+        // Quantité with +/- buttons
         VBox quantiteContainer = new VBox(5);
         quantiteContainer.setAlignment(Pos.CENTER);
+        quantiteContainer.setMinWidth(120);
         
-        Label qteTitleLabel = new Label("Qté");
-        qteTitleLabel.setStyle("-fx-font-size: 10px; -fx-text-fill: #999;");
+        Label qteTitleLabel = new Label("Quantité");
+        qteTitleLabel.setStyle("-fx-font-size: 10px; -fx-text-fill: #999; -fx-font-weight: bold;");
+        
+        // Horizontal container for -/quantity/+ buttons
+        HBox quantiteControls = new HBox(8);
+        quantiteControls.setAlignment(Pos.CENTER);
+        
+        Button minusButton = new Button("➖");
+        minusButton.getStyleClass().addAll("btn", "btn-secondary");
+        minusButton.setStyle("-fx-padding: 5 12; -fx-font-size: 14px; -fx-min-width: 35px;");
+        minusButton.setOnAction(e -> {
+            if (finalDetail.getQuantite() > 1) {
+                finalDetail.setQuantite(finalDetail.getQuantite() - 1);
+                updatePanierView(); // Refresh the entire cart display
+                updateTotal();      // Update totals
+            } else {
+                retirerDuPanier(finalDetail);
+            }
+        });
         
         Label qteLabel = new Label(String.valueOf(detail.getQuantite()));
-        qteLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: #2E7D32;");
+        qteLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: #2E7D32; -fx-min-width: 35px; -fx-alignment: center;");
         
-        quantiteContainer.getChildren().addAll(qteTitleLabel, qteLabel);
+        Button plusButton = new Button("➕");
+        plusButton.getStyleClass().addAll("btn", "btn-primary");
+        plusButton.setStyle("-fx-padding: 5 12; -fx-font-size: 14px; -fx-min-width: 35px;");
+        plusButton.setOnAction(e -> {
+            finalDetail.setQuantite(finalDetail.getQuantite() + 1);
+            updatePanierView(); // Refresh the entire cart display
+            updateTotal();      // Update totals
+        });
+        
+        quantiteControls.getChildren().addAll(minusButton, qteLabel, plusButton);
+        quantiteContainer.getChildren().addAll(qteTitleLabel, quantiteControls);
 
         // Prix
         VBox prixContainer = new VBox(5);
@@ -307,21 +335,160 @@ public class CaisseController {
     }
 
     @FXML
+    /**
+     * ✨ NOUVELLE RECHERCHE LIVE - Affiche les résultats pendant que vous tapez
+     */
     private void handleRechercheProduit() {
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Recherche Produit");
-        dialog.setHeaderText("Rechercher par nom :");
-        dialog.setContentText("Nom:");
-
-        Optional<String> result = dialog.showAndWait();
-        result.ifPresent(nom -> {
-            Produit produit = produitDAO.rechercherProduit(nom);
-            if (produit != null) {
-                ajouterAuPanier(produit, 1);
-            } else {
-                afficherAlerte(Alert.AlertType.WARNING, "Produit introuvable", "Aucun produit trouvé avec ce nom.");
+        // Créer un dialogue personnalisé avec recherche live
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("🔎 Recherche Produit en Direct");
+        
+        VBox dialogRoot = new VBox(15);
+        dialogRoot.setPadding(new Insets(20));
+        dialogRoot.setStyle("-fx-background-color: white;");
+        
+        // Label de titre
+        Label titleLabel = new Label("✨ Recherche en temps réel");
+        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2E7D32;");
+        
+        Label subtitleLabel = new Label("Tapez pour voir les résultats instantanément (MAJ/min acceptés)");
+        subtitleLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #718096; -fx-font-style: italic;");
+        
+        // Champ de recherche
+        javafx.scene.control.TextField rechercheField = new javafx.scene.control.TextField();
+        rechercheField.setPromptText("🔍 Nom ou code-barres du produit...");
+        rechercheField.setStyle("-fx-font-size: 14px; -fx-padding: 10;");
+        
+        // Liste de résultats
+        javafx.scene.control.ListView<Produit> resultsListView = new javafx.scene.control.ListView<>();
+        resultsListView.setPrefHeight(300);
+        resultsListView.setStyle("-fx-font-size: 13px;");
+        
+        // Label pour le nombre de résultats
+        Label countLabel = new Label("Tapez pour rechercher...");
+        countLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #4A5568;");
+        
+        // Cell factory pour afficher les produits joliment
+        resultsListView.setCellFactory(lv -> new javafx.scene.control.ListCell<Produit>() {
+            @Override
+            protected void updateItem(Produit produit, boolean empty) {
+                super.updateItem(produit, empty);
+                if (empty || produit == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    VBox vbox = new VBox(4);
+                    
+                    Label nomLabel = new Label("📦 " + produit.getNom());
+                    nomLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+                    
+                    Label detailsLabel = new Label(String.format("Code: %s | Prix: %.2f DT | Stock: %d", 
+                        produit.getCodeBarre(), 
+                        produit.getPrixVenteDefaut(), 
+                        produit.getQuantiteStock()));
+                    detailsLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #718096;");
+                    
+                    vbox.getChildren().addAll(nomLabel, detailsLabel);
+                    setGraphic(vbox);
+                }
             }
         });
+        
+        // ✨ LIVE SEARCH - Écouter les changements du champ de recherche (CASE INSENSITIVE)
+        rechercheField.textProperty().addListener((obs, oldVal, newVal) -> {
+            resultsListView.getItems().clear();
+            
+            if (newVal == null || newVal.trim().isEmpty()) {
+                countLabel.setText("Tapez pour rechercher...");
+                return;
+            }
+            
+            // Recherche CASE INSENSITIVE (MAJ et minuscule acceptées)
+            String recherche = newVal.trim().toLowerCase();
+            
+            java.util.List<Produit> resultats = produitDAO.findAll().stream()
+                .filter(p -> p.getNom().toLowerCase().contains(recherche) ||
+                            p.getCodeBarre().toLowerCase().contains(recherche))
+                .limit(50) // Limiter à 50 résultats
+                .collect(java.util.stream.Collectors.toList());
+            
+            resultsListView.getItems().addAll(resultats);
+            
+            if (resultats.isEmpty()) {
+                countLabel.setText("❌ Aucun produit trouvé");
+                countLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #D32F2F;");
+            } else {
+                countLabel.setText(String.format("✅ %d produit(s) trouvé(s)", resultats.size()));
+                countLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #2E7D32;");
+            }
+        });
+        
+        // Boutons
+        HBox buttonsBox = new HBox(10);
+        buttonsBox.setAlignment(Pos.CENTER_RIGHT);
+        
+        Button ajouterBtn = new Button("✅ Ajouter au Panier");
+        ajouterBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;");
+        ajouterBtn.setOnAction(e -> {
+            Produit selected = resultsListView.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                if (selected.getQuantiteStock() > 0) {
+                    ajouterAuPanier(selected, 1);
+                    dialogStage.close();
+                } else {
+                    afficherAlerte(Alert.AlertType.WARNING, "Stock insuffisant", "Ce produit n'est plus en stock.");
+                }
+            } else {
+                afficherAlerte(Alert.AlertType.WARNING, "Sélection requise", "Veuillez sélectionner un produit.");
+            }
+        });
+        
+        Button annulerBtn = new Button("❌ Annuler");
+        annulerBtn.setStyle("-fx-background-color: #757575; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;");
+        annulerBtn.setOnAction(e -> dialogStage.close());
+        
+        buttonsBox.getChildren().addAll(annulerBtn, ajouterBtn);
+        
+        // Assembler le dialogue
+        dialogRoot.getChildren().addAll(
+            titleLabel, 
+            subtitleLabel, 
+            rechercheField, 
+            countLabel, 
+            resultsListView, 
+            buttonsBox
+        );
+        
+        // Double-clic pour ajouter directement
+        resultsListView.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 2) {
+                Produit selected = resultsListView.getSelectionModel().getSelectedItem();
+                if (selected != null && selected.getQuantiteStock() > 0) {
+                    ajouterAuPanier(selected, 1);
+                    dialogStage.close();
+                }
+            }
+        });
+        
+        // Entrée sur le champ pour sélectionner le premier résultat
+        rechercheField.setOnAction(e -> {
+            if (!resultsListView.getItems().isEmpty()) {
+                Produit premier = resultsListView.getItems().get(0);
+                if (premier.getQuantiteStock() > 0) {
+                    ajouterAuPanier(premier, 1);
+                    dialogStage.close();
+                }
+            }
+        });
+        
+        Scene dialogScene = new Scene(dialogRoot, 600, 500);
+        dialogStage.setScene(dialogScene);
+        dialogStage.setResizable(false);
+        
+        // Focus sur le champ de recherche
+        Platform.runLater(() -> rechercheField.requestFocus());
+        
+        dialogStage.showAndWait();
     }
 
     @FXML

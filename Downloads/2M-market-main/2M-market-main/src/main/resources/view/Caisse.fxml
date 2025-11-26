@@ -13,10 +13,13 @@
    <style>
       -fx-background-image: url('/background/backgroundcaisse.jpg');
       -fx-background-size: cover;
-      -fx-background-position: center;
+      -fx-background-position: center center;
       -fx-background-repeat: no-repeat;
    </style>
    <children>
+      <!-- Semi-transparent overlay for better readability and clarity -->
+      <AnchorPane style="-fx-background-color: rgba(255, 255, 255, 0.08);" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" mouseTransparent="true" />
+      
       <VBox spacing="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
             <!-- Header -->
@@ -32,7 +35,7 @@
             <HBox spacing="0.0" VBox.vgrow="ALWAYS">
                <children>
                   <!-- Left Panel - Panier -->
-                  <VBox spacing="15.0" style="-fx-background-color: #f9f9f9; -fx-padding: 20;" HBox.hgrow="ALWAYS">
+                  <VBox spacing="15.0" style="-fx-background-color: rgba(249, 249, 249, 0.92); -fx-padding: 20; -fx-background-radius: 10;" HBox.hgrow="ALWAYS">
                      <children>
                         <Label styleClass="section-title" text="🛒 Panier Achat" />
                         <ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-border-color: #e0e0e0; -fx-border-radius: 8;" VBox.vgrow="ALWAYS">

@@ -17,10 +17,13 @@
    <style>
       -fx-background-image: url('/background/backgroundpointdevente.jpg');
       -fx-background-size: cover;
-      -fx-background-position: center;
+      -fx-background-position: center center;
       -fx-background-repeat: no-repeat;
    </style>
    <children>
+      <!-- Semi-transparent overlay for better readability and clarity -->
+      <AnchorPane style="-fx-background-color: rgba(255, 255, 255, 0.08);" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" mouseTransparent="true" />
+      
       <!-- ========================================
            CONTENEUR PRINCIPAL
            ======================================== -->
@@ -59,23 +62,24 @@
          <!-- ========================================
               SECTION RECHERCHE RAPIDE
               ======================================== -->
-         <VBox spacing="10" styleClass="search-section">
+         <VBox spacing="10" styleClass="search-section" style="-fx-background-color: rgba(255, 255, 255, 0.92);">
             <padding>
                <Insets bottom="15" left="25" right="25" top="15" />
             </padding>
             <children>
                <!-- Titre de la section -->
                <HBox alignment="CENTER_LEFT" spacing="8">
-                  <Label style="-fx-font-size: 18px;" text="🔍" />
-                  <Label styleClass="section-title" text="Recherche Rapide" />
+                  <Label style="-fx-font-size: 18px;" text="🔎" />
+                  <Label styleClass="section-title" text="Recherche Rapide en Direct" />
+                  <Label style="-fx-font-size: 11px; -fx-text-fill: #718096; -fx-font-style: italic;" text="✨ Tapez pour voir les résultats instantanément" />
                </HBox>
 
                <!-- Ligne de recherche et quantité -->
                <HBox alignment="CENTER_LEFT" spacing="12" styleClass="search-bar">
                   <!-- Champ de recherche -->
                   <VBox spacing="4" HBox.hgrow="ALWAYS">
-                     <Label styleClass="search-label" text="Nom ou Code-barres" />
-                     <TextField fx:id="rechercheField" onAction="#handleRecherche" promptText="Scannez ou tapez le nom du produit..." styleClass="search-field" HBox.hgrow="ALWAYS" />
+                     <Label styleClass="search-label" text="Nom ou Code-barres (Filtre en direct)" />
+                     <TextField fx:id="rechercheField" onAction="#handleRecherche" promptText="✨ Tapez pour rechercher instantanément..." styleClass="search-field" HBox.hgrow="ALWAYS" />
                   </VBox>
 
                   <!-- Contrôle de quantité -->

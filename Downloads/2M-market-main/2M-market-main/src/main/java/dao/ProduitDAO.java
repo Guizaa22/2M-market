@@ -21,7 +21,12 @@ public class ProduitDAO {
      */
     public List<Produit> findAll() {
         List<Produit> produits = new ArrayList<>();
-        String sql = "SELECT * FROM produits ORDER BY nom";
+        String sql = """
+            SELECT p.*, COALESCE(c.nom, p.categorie) AS categorie_affiche
+            FROM produits p
+            LEFT JOIN categories c ON p.category_id = c.id
+            ORDER BY p.nom
+        """;
         
         try (Connection conn = DBConnector.getConnection();
              Statement stmt = conn.createStatement();
@@ -132,7 +137,13 @@ public class ProduitDAO {
      */
     public List<Produit> findStockFaible() {
         List<Produit> produits = new ArrayList<>();
-        String sql = "SELECT * FROM produits WHERE quantite_stock <= seuil_alerte ORDER BY quantite_stock ASC";
+        String sql = """
+            SELECT p.*, COALESCE(c.nom, p.categorie) AS categorie_affiche
+            FROM produits p
+            LEFT JOIN categories c ON p.category_id = c.id
+            WHERE quantite_stock <= seuil_alerte
+            ORDER BY quantite_stock ASC
+        """;
         
         try (Connection conn = DBConnector.getConnection();
              Statement stmt = conn.createStatement();
@@ -359,7 +370,7 @@ public class ProduitDAO {
         
         // Essayer d'abord avec la table categories (via category_id)
         try {
-            String sql = "SELECT p.* FROM produits p " +
+            String sql = "SELECT p.*, c.nom AS categorie_affiche FROM produits p " +
                        "INNER JOIN categories c ON p.category_id = c.id " +
                        "WHERE c.nom = ? AND p.quantite_stock > 0 ORDER BY p.nom";
             
@@ -376,7 +387,7 @@ public class ProduitDAO {
             }
         } catch (SQLException e) {
             // Si la table categories n'existe pas, utiliser l'ancienne méthode
-            String sql = "SELECT * FROM produits WHERE categorie = ? AND quantite_stock > 0 ORDER BY nom";
+            String sql = "SELECT *, categorie AS categorie_affiche FROM produits WHERE categorie = ? AND quantite_stock > 0 ORDER BY nom";
             
             try (Connection conn = DBConnector.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -402,7 +413,7 @@ public class ProduitDAO {
      */
     public List<Produit> findByCategoryId(int categoryId) {
         List<Produit> produits = new ArrayList<>();
-        String sql = "SELECT * FROM produits WHERE category_id = ? AND quantite_stock > 0 ORDER BY nom";
+        String sql = "SELECT *, categorie AS categorie_affiche FROM produits WHERE category_id = ? AND quantite_stock > 0 ORDER BY nom";
         
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -420,13 +431,34 @@ public class ProduitDAO {
         return produits;
     }
     
+    /**
+     * Récupère tous les produits appartenant à la catégorie Tabac (et variantes)
+     * Cette méthode filtre côté Java pour garantir la compatibilité avec les bases anciennes.
+     *
+     * @return Liste des produits considérés comme tabac (tabac, puff, terrea, cigarette)
+     */
+    public List<Produit> findProduitsTabac() {
+        List<Produit> produitsTabac = new ArrayList<>();
+        
+        for (Produit produit : findAll()) {
+            if (produit != null && produit.isTabac()) {
+                produitsTabac.add(produit);
+            }
+        }
+        
+        return produitsTabac;
+    }
+    
     private Produit mapResultSetToProduit(ResultSet rs) throws SQLException {
         // La base de données utilise snake_case
         String categorie = null;
         try {
-            categorie = rs.getString("categorie");
-        } catch (SQLException e) {
-            // Colonne categorie peut ne pas exister dans certaines bases
+            categorie = rs.getString("categorie_affiche");
+        } catch (SQLException ignored) { }
+        if (categorie == null) {
+            try {
+                categorie = rs.getString("categorie");
+            } catch (SQLException ignored) { }
         }
         
         String unite = null;

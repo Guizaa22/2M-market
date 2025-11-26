@@ -1,6 +1,10 @@
 package controller;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -11,6 +15,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
 import model.Utilisateur;
+import model.Produit;
+import dao.ProduitDAO;
+import dao.VenteDAO;
 import util.FXMLUtils;
 
 /**
@@ -40,7 +47,18 @@ public class AdminDashboardController {
     @FXML
     private Button deconnexionButton;
     
+    @FXML
+    private Label totalProduitsStatLabel;
+    
+    @FXML
+    private Label rupturesStatLabel;
+    
+    @FXML
+    private Label ventesJourStatLabel;
+    
     private Utilisateur utilisateur;
+    private ProduitDAO produitDAO;
+    private VenteDAO venteDAO;
     
     @FXML
     private void initialize() {
@@ -48,6 +66,9 @@ public class AdminDashboardController {
         if (utilisateur != null) {
             welcomeLabel.setText("Bienvenue, " + utilisateur.getUsername() + " (Admin)");
         }
+        produitDAO = new ProduitDAO();
+        venteDAO = new VenteDAO();
+        rafraichirStatistiques();
     }
     
     @FXML
@@ -128,5 +149,23 @@ public class AdminDashboardController {
         }
     }
 
+    private void rafraichirStatistiques() {
+        List<Produit> produits = produitDAO.findAll();
+        long produitsDisponibles = produits.stream()
+                .filter(p -> p.getQuantiteStock() > 0)
+                .count();
+        long ruptures = produits.stream()
+                .filter(p -> p.getQuantiteStock() == 0)
+                .count();
+        totalProduitsStatLabel.setText(String.valueOf(produitsDisponibles));
+        rupturesStatLabel.setText(String.valueOf(ruptures));
+        
+        LocalDateTime debutJour = LocalDateTime.now()
+                .with(LocalTime.MIN);
+        LocalDateTime finJour = LocalDateTime.now()
+                .with(LocalTime.MAX);
+        BigDecimal ventesJour = venteDAO.getTotalRecettes(debutJour, finJour);
+        ventesJourStatLabel.setText(String.format("%.2f DT", ventesJour));
+    }
 }
 

@@ -2,10 +2,12 @@ package util;
 
 import java.io.IOException;
 
+import javafx.animation.FadeTransition;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 /**
  * Classe utilitaire pour charger les vues FXML
@@ -32,6 +34,7 @@ public class FXMLUtils {
      */
     public static void changeScene(Stage stage, String fxmlPath, String title) throws IOException {
         Parent root = loadFXML(fxmlPath);
+        root.setOpacity(0);
         Scene scene = new Scene(root);
         
         // Apply global CSS to all scenes
@@ -56,6 +59,11 @@ public class FXMLUtils {
                 stage.setMaximized(true);
             }
         }
+        
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(320), root);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+        fadeIn.play();
     }
     
     /**

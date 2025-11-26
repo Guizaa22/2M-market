@@ -3,6 +3,7 @@ package controller;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 
 import dao.ProduitDAO;
@@ -15,6 +16,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import model.DetailVente;
 import model.Produit;
 import model.Vente;
@@ -24,36 +32,6 @@ import model.Vente;
  * Avec statistiques détaillées et meilleurs produits
  */
 public class GestionTabacController {
-    
-    @FXML
-    private TableView<Vente> ventesTabacTable;
-    
-    @FXML
-    private TableColumn<Vente, Integer> idColumn;
-    
-    @FXML
-    private TableColumn<Vente, String> dateColumn;
-    
-    @FXML
-    private TableColumn<Vente, BigDecimal> totalColumn;
-    
-    @FXML
-    private TableColumn<Vente, Integer> utilisateurColumn;
-    
-    @FXML
-    private TableView<DetailVente> detailsTable;
-    
-    @FXML
-    private TableColumn<DetailVente, String> produitColumn;
-    
-    @FXML
-    private TableColumn<DetailVente, Integer> quantiteColumn;
-    
-    @FXML
-    private TableColumn<DetailVente, BigDecimal> prixColumn;
-    
-    @FXML
-    private TableColumn<DetailVente, BigDecimal> sousTotalColumn;
     
     @FXML
     private TableView<Map<String, Object>> topProduitsTable;
@@ -82,48 +60,23 @@ public class GestionTabacController {
     @FXML
     private Label recetteMoisLabel;
     
+    @FXML
+    private FlowPane produitsTabacContainer;
+    
+    @FXML
+    private Label produitsTabacCountLabel;
+    
     private VenteDAO venteDAO;
     private ProduitDAO produitDAO;
-    private ObservableList<Vente> ventesTabac;
+    private List<Vente> ventesTabac;
     private ObservableList<Map<String, Object>> topProduits;
     
     @FXML
     private void initialize() {
         venteDAO = new VenteDAO();
         produitDAO = new ProduitDAO();
-        ventesTabac = FXCollections.observableArrayList();
+        ventesTabac = new java.util.ArrayList<>();
         topProduits = FXCollections.observableArrayList();
-        
-        // Configuration de la table des ventes
-        idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
-        dateColumn.setCellValueFactory(cellData -> {
-            Vente vente = cellData.getValue();
-            if (vente.getDateVente() != null) {
-                return javafx.beans.binding.Bindings.createStringBinding(() ->
-                    vente.getDateVente().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
-                );
-            }
-            return javafx.beans.binding.Bindings.createStringBinding(() -> "");
-        });
-        totalColumn.setCellValueFactory(new PropertyValueFactory<>("totalVente"));
-        utilisateurColumn.setCellValueFactory(new PropertyValueFactory<>("utilisateurId"));
-        
-        // Configuration de la table des détails
-        produitColumn.setCellValueFactory(cellData -> {
-            DetailVente detail = cellData.getValue();
-            Produit produit = detail.getProduit();
-            if (produit == null) {
-                produit = produitDAO.findById(detail.getProduitId());
-                detail.setProduit(produit);
-            }
-            final Produit finalProduit = produit;
-            return javafx.beans.binding.Bindings.createStringBinding(() ->
-                finalProduit != null ? finalProduit.getNom() : "Produit ID: " + detail.getProduitId()
-            );
-        });
-        quantiteColumn.setCellValueFactory(new PropertyValueFactory<>("quantite"));
-        prixColumn.setCellValueFactory(new PropertyValueFactory<>("prixVenteUnitaire"));
-        sousTotalColumn.setCellValueFactory(new PropertyValueFactory<>("sousTotal"));
         
         // Configuration de la table des meilleurs produits
         produitTopColumn.setCellValueFactory(cellData -> {
@@ -142,56 +95,30 @@ public class GestionTabacController {
             return javafx.beans.binding.Bindings.createObjectBinding(() -> ca != null ? ca : BigDecimal.ZERO);
         });
         
-        ventesTabacTable.setItems(ventesTabac);
         topProduitsTable.setItems(topProduits);
-        
-        // Écouter la sélection d'une vente pour afficher ses détails
-        ventesTabacTable.getSelectionModel().selectedItemProperty().addListener((obs, oldVente, newVente) -> {
-            if (newVente != null) {
-                chargerDetailsVente(newVente);
-            }
-        });
         
         chargerVentesTabac();
         chargerTopProduits();
         calculerStatistiques();
+        chargerProduitsTabac();
     }
     
     /**
      * Charge toutes les ventes de tabac
      */
     private void chargerVentesTabac() {
-        ventesTabac.clear();
-        java.util.List<Vente> ventes = venteDAO.findVentesTabac();
-        ventesTabac.addAll(ventes);
+        List<Vente> ventes = venteDAO.findVentesTabac();
+        if (ventes != null) {
+            ventesTabac = ventes;
+        } else {
+            ventesTabac = new java.util.ArrayList<>();
+        }
     }
     
-    /**
-     * Charge les meilleurs produits de tabac
-     */
     private void chargerTopProduits() {
         topProduits.clear();
         java.util.List<Map<String, Object>> produits = venteDAO.getTopProduitsTabac(10);
         topProduits.addAll(produits);
-    }
-    
-    /**
-     * Charge les détails d'une vente sélectionnée
-     */
-    private void chargerDetailsVente(Vente vente) {
-        ObservableList<DetailVente> details = FXCollections.observableArrayList();
-        java.util.List<DetailVente> detailsList = venteDAO.findDetailsByVente(vente.getId());
-        
-        // Filtrer pour ne garder que les produits de tabac
-        for (DetailVente detail : detailsList) {
-            Produit produit = produitDAO.findById(detail.getProduitId());
-            if (produit != null && produit.isTabac()) {
-                detail.setProduit(produit);
-                details.add(detail);
-            }
-        }
-        
-        detailsTable.setItems(details);
     }
     
     /**
@@ -238,7 +165,7 @@ public class GestionTabacController {
     @FXML
     private void handleRetour() {
         try {
-            javafx.stage.Stage stage = (javafx.stage.Stage) ventesTabacTable.getScene().getWindow();
+            Stage stage = (Stage) totalTabacLabel.getScene().getWindow();
             util.FXMLUtils.changeScene(stage, "/view/AdminDashboard.fxml", "Dashboard Administrateur");
         } catch (Exception e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", 
@@ -251,6 +178,39 @@ public class GestionTabacController {
         chargerVentesTabac();
         chargerTopProduits();
         calculerStatistiques();
+        chargerProduitsTabac();
+    }
+    
+    /**
+     * Charge et affiche les produits de tabac disponibles
+     */
+    private void chargerProduitsTabac() {
+        if (produitsTabacContainer == null) {
+            return;
+        }
+        
+        produitsTabacContainer.getChildren().clear();
+        List<Produit> produitsTabac = produitDAO.findProduitsTabac();
+        
+        if (produitsTabac == null || produitsTabac.isEmpty()) {
+            produitsTabacContainer.getChildren().add(creerBoiteMessageProduitTabac());
+            if (produitsTabacCountLabel != null) {
+                produitsTabacCountLabel.setText("Aucun produit tabac disponible");
+            }
+            return;
+        }
+        
+        for (Produit produit : produitsTabac) {
+            if (produit.getQuantiteStock() > 0) {
+                produitsTabacContainer.getChildren().add(creerCarteProduitTabac(produit));
+            }
+        }
+        
+        if (produitsTabacCountLabel != null) {
+            produitsTabacCountLabel.setText(
+                String.format("%d produit(s) tabac disponibles", produitsTabac.size())
+            );
+        }
     }
     
     private void showAlert(Alert.AlertType type, String title, String message) {
@@ -259,5 +219,94 @@ public class GestionTabacController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+    
+    /**
+     * Crée une carte visuelle pour un produit de tabac
+     */
+    private VBox creerCarteProduitTabac(Produit produit) {
+        VBox card = new VBox(10);
+        card.getStyleClass().add("product-card");
+        card.setAlignment(Pos.TOP_LEFT);
+        card.setPadding(new Insets(16));
+        card.setPrefWidth(240);
+        
+        Label nomLabel = new Label(produit.getNom());
+        nomLabel.getStyleClass().add("product-name");
+        nomLabel.setWrapText(true);
+        
+        Label categorieLabel = new Label("📂 " + (produit.getCategorie() != null ? produit.getCategorie() : "Tabac"));
+        categorieLabel.setStyle("-fx-text-fill: #7B1FA2; -fx-font-size: 12px; -fx-font-weight: bold;");
+        
+        Label codeLabel = new Label("📋 " + produit.getCodeBarre());
+        codeLabel.setStyle("-fx-text-fill: #555; -fx-font-size: 12px;");
+        
+        Label prixVenteLabel = new Label(String.format("💰 %.2f DT", produit.getPrixVenteDefaut()));
+        prixVenteLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #4CAF50;");
+        
+        Label prixAchatLabel = new Label(String.format("🏷️ Achat: %.2f DT", produit.getPrixAchatActuel()));
+        prixAchatLabel.setStyle("-fx-text-fill: #777;");
+        
+        HBox stockBox = new HBox(6);
+        stockBox.setAlignment(Pos.CENTER_LEFT);
+        stockBox.setPadding(new Insets(6, 0, 0, 0));
+        
+        Label stockBadge = new Label("Stock: " + produit.getQuantiteStock());
+        stockBadge.getStyleClass().add("product-stock");
+        stockBadge.getStyleClass().add(getStockStyleClass(produit));
+        stockBox.getChildren().add(stockBadge);
+        
+        Label uniteLabel = new Label("📦 " + produit.getUnite());
+        uniteLabel.setStyle("-fx-text-fill: #555;");
+        
+        VBox seuilBox = new VBox(2);
+        Label seuilLabel = new Label("⚠️ Seuil: " + produit.getSeuilAlerte());
+        seuilLabel.setStyle("-fx-text-fill: #FF9800; -fx-font-weight: bold;");
+        seuilBox.getChildren().add(seuilLabel);
+        
+        card.getChildren().addAll(
+            nomLabel,
+            categorieLabel,
+            codeLabel,
+            prixVenteLabel,
+            prixAchatLabel,
+            uniteLabel,
+            stockBox,
+            seuilBox
+        );
+        
+        return card;
+    }
+    
+    private String getStockStyleClass(Produit produit) {
+        if (produit.getQuantiteStock() == 0) {
+            return "stock-critical";
+        } else if (produit.getQuantiteStock() <= produit.getSeuilAlerte()) {
+            return "stock-low";
+        } else if (produit.getQuantiteStock() > 50) {
+            return "stock-high";
+        }
+        return "stock-medium";
+    }
+    
+    private VBox creerBoiteMessageProduitTabac() {
+        VBox box = new VBox(10);
+        box.setAlignment(Pos.CENTER);
+        box.setPadding(new Insets(30));
+        box.setStyle("-fx-background-color: rgba(255,255,255,0.6); -fx-background-radius: 12;");
+        
+        Label icon = new Label("🛑");
+        icon.setStyle("-fx-font-size: 36px;");
+        
+        Label title = new Label("Aucun produit tabac disponible");
+        title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #7B1FA2;");
+        
+        Label desc = new Label("Ajoutez des produits avec la catégorie Tabac, Puff, Terrea ou Cigarette pour les voir apparaître ici automatiquement.");
+        desc.setWrapText(true);
+        desc.setStyle("-fx-text-fill: #555;");
+        desc.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+        
+        box.getChildren().addAll(icon, title, desc);
+        return box;
     }
 }

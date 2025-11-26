@@ -8,10 +8,19 @@
 <AnchorPane xmlns="http://javafx.com/javafx/17.0.2-ea"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controller.GestionStockController"
-            stylesheets="@/styles/gestionstock.css"
+            stylesheets="@/styles/global.css, @/styles/gestionstock.css"
             styleClass="root">
+   <style>
+      -fx-background-image: url('/background/backgroundpointdevente.jpg');
+      -fx-background-size: cover;
+      -fx-background-position: center center;
+      -fx-background-repeat: no-repeat;
+   </style>
 
    <children>
+      <!-- Semi-transparent overlay for better readability and clarity -->
+      <AnchorPane style="-fx-background-color: rgba(255, 255, 255, 0.08);" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" mouseTransparent="true" />
+      
       <!-- ========================================
            CONTENEUR PRINCIPAL
            ======================================== -->
@@ -21,7 +30,7 @@
          <!-- ========================================
               HEADER - Barre supérieure moderne
               ======================================== -->
-         <HBox alignment="CENTER_LEFT" spacing="20" styleClass="header-box">
+         <HBox alignment="CENTER_LEFT" spacing="20" styleClass="header-bar" style="-fx-background-color: linear-gradient(to right, rgba(46, 125, 50, 0.95), rgba(76, 175, 80, 0.95)); -fx-padding: 25 40;">
             <padding>
                <Insets top="25" right="40" bottom="25" left="40"/>
             </padding>
@@ -60,7 +69,7 @@
                  SECTION GAUCHE - FORMULAIRE PRODUIT
                  ======================================== -->
             <VBox spacing="20" styleClass="section-box"
-                  style="-fx-pref-width: 400; -fx-min-width: 380;">
+                  style="-fx-pref-width: 400; -fx-min-width: 380; -fx-background-color: rgba(255, 255, 255, 0.92); -fx-background-radius: 10; -fx-padding: 20;">
                <children>
                   <!-- Titre Formulaire -->
                   <HBox alignment="CENTER_LEFT" spacing="10">
@@ -191,7 +200,7 @@
             <!-- ========================================
                  SECTION DROITE - LISTE DES PRODUITS
                  ======================================== -->
-            <VBox spacing="20" styleClass="section-box" HBox.hgrow="ALWAYS">
+            <VBox spacing="20" styleClass="section-box" HBox.hgrow="ALWAYS" style="-fx-background-color: rgba(255, 255, 255, 0.92); -fx-background-radius: 10; -fx-padding: 20;">
                <children>
                   <!-- Header de la liste avec recherche -->
                   <HBox alignment="CENTER_LEFT" spacing="20">
@@ -206,14 +215,17 @@
                            </Label>
                         </HBox>
 
-                        <!-- Barre de recherche -->
-                        <HBox spacing="0" alignment="CENTER_RIGHT" styleClass="search-box">
-                           <Label text="[?]" style="-fx-font-size: 18px; -fx-padding: 0 10 0 15;"/>
-                           <TextField fx:id="rechercheField"
-                                      promptText="Rechercher..."
-                                      style="-fx-pref-width: 280; -fx-background-color: transparent; -fx-border-width: 0;"
-                                      onKeyReleased="#handleRechercher"/>
-                        </HBox>
+                        <!-- Barre de recherche LIVE -->
+                        <VBox spacing="2" alignment="CENTER_RIGHT">
+                           <HBox spacing="0" alignment="CENTER_RIGHT" styleClass="search-box">
+                              <Label text="🔎" style="-fx-font-size: 18px; -fx-padding: 0 10 0 15;"/>
+                              <TextField fx:id="rechercheField"
+                                         promptText="✨ Recherche en temps réel..."
+                                         style="-fx-pref-width: 300; -fx-background-color: transparent; -fx-border-width: 0;"
+                                         onKeyReleased="#handleRechercher"/>
+                           </HBox>
+                           <Label text="Filtre instantané" style="-fx-font-size: 10px; -fx-text-fill: #718096; -fx-font-style: italic; -fx-padding: 0 15 0 0;" />
+                        </VBox>
                      </children>
                   </HBox>
 

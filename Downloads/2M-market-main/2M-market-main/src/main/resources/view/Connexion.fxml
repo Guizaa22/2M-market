@@ -9,10 +9,13 @@
    <style>
       -fx-background-image: url('/background/backgroundlogin.jpg');
       -fx-background-size: cover;
-      -fx-background-position: center;
+      -fx-background-position: center center;
       -fx-background-repeat: no-repeat;
    </style>
    <children>
+      <!-- Semi-transparent overlay for better readability and clarity -->
+      <AnchorPane style="-fx-background-color: rgba(255, 255, 255, 0.08);" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" mouseTransparent="true" />
+      
       <VBox alignment="CENTER" spacing="25.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
             <Label text="🛒 2M Market" textAlignment="CENTER">
@@ -25,7 +28,7 @@
                   <Font size="16.0" />
                </font>
             </Label>
-            <VBox alignment="CENTER" spacing="20.0" style="-fx-background-color: rgba(255, 255, 255, 0.95); -fx-background-radius: 20; -fx-padding: 40; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 20, 0, 0, 10);">
+            <VBox alignment="CENTER" spacing="20.0" style="-fx-background-color: rgba(255, 255, 255, 0.92); -fx-background-radius: 20; -fx-padding: 40; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 20, 0, 0, 10);">
                <children>
                   <Label text="Connexion" textAlignment="CENTER" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2E7D32;">
                      <font>
